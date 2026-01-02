@@ -1,19 +1,16 @@
-import express from "express";
-import cors from cors;
+import express from 'express';
+import cors from 'cors';
 
-const app = express()
-const server = createServer(app)
+const app = express();
+const PORT = process.env.PORT || 8000;
 
-app.use(cors({
-  origin: "*",
-  methods: ["GET", "POST"],
-  allowedHeaders: ["*"],
-  credentials: true,
-}));
-app.use(express.json({ limit: "40kb" }));
-app.use(express.urlencoded({ limit: "40kb", extended: true }));
+app.use(cors());
+app.use(express.json());
 
+app.get('/', (req, res) => {
+  res.json({ message: 'Talkify API Server' });
+});
 
-server.listen(app.get("port"), () => {
-  console.log(`🚀 Server listening on port ${app.get("port")}`);
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
