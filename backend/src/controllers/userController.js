@@ -77,3 +77,45 @@ export const login = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+
+export const googleAuth = async (req, res) => {
+  const { idToken } = req.body;
+
+  if (!idToken) {
+    return res.status(400).json({ message: 'ID token required' });
+  }
+
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    const { uid, email, name, picture } = decodedToken;
+    const username = email.split('@')[0];
+
+    const userRef = db.collection('users').doc(username);
+    const userSnap = await userRef.get();
+
+    let token = crypto.randomBytes(20).toString('hex');
+
+    if (!userSnap.exists) {
+      await userRef.set({
+        uid,
+        name: name || username,
+        username,
+        email,
+        photoURL: picture || '',
+        token,
+        authProvider: 'google',
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+    } else {
+      await userRef.update({ token });
+    }
+
+    res.status(200).json({
+      token,
+      user: { username, name: name || username, photoURL: picture || '' },
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
