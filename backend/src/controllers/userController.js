@@ -119,3 +119,45 @@ export const googleAuth = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+
+
+export const verifyToken = async (req, res) => {
+  const token = req.headers.authorization?.split(' ')[1] || req.query.token;
+  
+  if (!token) {
+    return res.status(httpStatus.UNAUTHORIZED).json({ 
+      valid: false,
+      message: "No token provided" 
+    });
+  }
+
+  try {
+    const usersQuery = await db.collection("users")
+      .where("token", "==", token)
+      .limit(1)
+      .get();
+
+    if (usersQuery.empty) {
+      return res.status(httpStatus.OK).json({ 
+        valid: false,
+        message: "Invalid token" 
+      });
+    }
+
+
+    const userData = usersQuery.docs[0].data();
+    const { password, token: _, ...safeUserData } = userData;
+
+    return res.status(httpStatus.OK).json({ 
+      valid: true,
+      user: safeUserData
+    });
+  } catch (e) {
+    console.error("Token verification error:", e);
+    return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ 
+      valid: false,
+      message: `Token verification failed: ${e.message}` 
+    });
+  }
+};
