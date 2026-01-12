@@ -20,3 +20,15 @@ export const connectToSocket = (server) => {
 
   return io;
 };
+
+socket.on('join-call', (roomCode) => {
+  socket.join(roomCode);
+  
+  if (!rooms.has(roomCode)) {
+    rooms.set(roomCode, new Set());
+  }
+  
+  rooms.get(roomCode).add(socket.id);
+  socket.emit('room-joined', roomCode);
+  io.to(roomCode).emit('user-joined', socket.id);
+});
