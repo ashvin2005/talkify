@@ -37,3 +37,12 @@ socket.on('join-call', (roomCode) => {
 socket.on('signal', (toId, message) => {
   io.to(toId).emit('signal', socket.id, message);
 });
+
+
+socket.on('chat-message', async (data, sender) => {
+  const roomCode = Array.from(socket.rooms).find(r => r !== socket.id);
+  
+  if (roomCode) {
+    io.to(roomCode).emit('chat-message', data, sender, socket.id);
+  }
+});
