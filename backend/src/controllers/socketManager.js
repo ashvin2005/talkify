@@ -32,3 +32,8 @@ socket.on('join-call', (roomCode) => {
   socket.emit('room-joined', roomCode);
   io.to(roomCode).emit('user-joined', socket.id);
 });
+
+
+socket.on('signal', (toId, message) => {
+  io.to(toId).emit('signal', socket.id, message);
+});
