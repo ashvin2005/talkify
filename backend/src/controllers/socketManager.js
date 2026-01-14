@@ -46,3 +46,22 @@ socket.on('chat-message', async (data, sender) => {
     io.to(roomCode).emit('chat-message', data, sender, socket.id);
   }
 });
+
+
+socket.on('chat-message', async (data, sender) => {
+  const roomCode = getCurrentRoom(socket);
+  
+  try {
+    await db.collection('meetings').doc(roomCode)
+      .collection('messages').add({
+        sender,
+        data,
+        socketIdSender: socket.id,
+        timestamp: admin.firestore.FieldValue.serverTimestamp(),
+      });
+    
+    io.to(roomCode).emit('chat-message', data, sender, socket.id);
+  } catch (error) {
+    console.error('Error saving message:', error);
+  }
+});
