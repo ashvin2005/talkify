@@ -161,3 +161,44 @@ export const verifyToken = async (req, res) => {
     });
   }
 };
+
+
+
+export const addToHistory = async (req, res) => {
+  const { token, meeting_code } = req.body;
+
+  if (!token || !meeting_code) {
+    return res
+      .status(400)
+      .json({ message: "Please provide token and meeting code" });
+  }
+
+  try {
+
+    const usersQuery = await db
+      .collection("users")
+      .where("token", "==", token)
+      .get();
+
+    if (usersQuery.empty) {
+      return res
+        .status(httpStatus.NOT_FOUND)
+        .json({ message: "User not found" });
+    }
+
+    const user = usersQuery.docs[0].data();
+
+    await db.collection("meetings").add({
+      user_id: user.username,
+      meetingCode: meeting_code,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    return res
+      .status(httpStatus.CREATED)
+      .json({ message: "Added code to history" });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({ message: `Something went wrong: ${e}` });
+  }
+};
