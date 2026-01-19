@@ -1,5 +1,9 @@
-import { useState } from 'react';
+import { useState, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { TextField, Button, Tabs, Tab, Box } from '@mui/material';
+import axios from 'axios';
+import { server } from '../environment';
+import { AuthContext } from '../contexts/AuthContext';
 
 function Authentication() {
   const [tab, setTab] = useState(0);
@@ -8,9 +12,33 @@ function Authentication() {
     username: '',
     password: '',
   });
+  const navigate = useNavigate();
+  const { login } = useContext(AuthContext);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleLogin = async () => {
+    try {
+      const response = await axios.post(`${server}/api/v1/users/login`, {
+        username: formData.username,
+        password: formData.password,
+      });
+
+      const { token, user } = response.data;
+      login(user, token);
+      navigate('/home');
+    } catch (error) {
+      console.error('Login failed:', error);
+      alert('Login failed. Please check your credentials.');
+    }
+  };
+
+  const handleSubmit = () => {
+    if (tab === 0) {
+      handleLogin();
+    }
   };
 
   return (
@@ -57,6 +85,7 @@ function Authentication() {
           fullWidth
           variant="contained"
           className="mt-4"
+          onClick={handleSubmit}
         >
           {tab === 0 ? 'Login' : 'Register'}
         </Button>
