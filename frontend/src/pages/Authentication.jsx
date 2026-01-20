@@ -94,4 +94,37 @@ function Authentication() {
   );
 }
 
+
+const handleRegister = async () => {
+  if (!formData.name || !formData.username || !formData.password) {
+    alert('Please fill in all fields');
+    return;
+  }
+
+  try {
+    await axios.post(`${server}/api/v1/users/register`, {
+      name: formData.name,
+      username: formData.username,
+      password: formData.password,
+    });
+
+    alert('Registration successful! Please login.');
+    setTab(0); 
+    setFormData({ name: '', username: '', password: '' });
+  } catch (error) {
+    console.error('Registration failed:', error);
+    alert('Registration failed. Username might already exist.');
+  }
+};
+
+
+const handleSubmit = () => {
+  if (tab === 0) {
+    handleLogin();
+  } else {
+    handleRegister();
+  }
+};
+
+
 export default Authentication;
