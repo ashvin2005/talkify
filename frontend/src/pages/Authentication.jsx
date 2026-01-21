@@ -4,8 +4,26 @@ import { TextField, Button, Tabs, Tab, Box } from '@mui/material';
 import axios from 'axios';
 import { server } from '../environment';
 import { AuthContext } from '../contexts/AuthContext';
+import { Google } from '@mui/icons-material';
 
 function Authentication() {
+
+  const handleGoogleSignIn = async () => {
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      const idToken = await result.user.getIdToken();
+      const response = await axios.post(`${server}/api/v1/users/google-auth`, {
+        idToken,
+      });
+      const { token, user } = response.data;
+      login(user, token);
+      navigate('/home');
+    } catch (error) {
+      console.error('Google sign-in failed:', error);
+      alert('Google sign-in failed. Please try again.');
+    }
+  };
   const [tab, setTab] = useState(0);
   const [formData, setFormData] = useState({
     name: '',
@@ -125,6 +143,8 @@ const handleSubmit = () => {
     handleRegister();
   }
 };
+
+
 
 
 export default Authentication;
