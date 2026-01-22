@@ -1,6 +1,13 @@
 import { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { TextField, Button, Tabs, Tab, Box } from '@mui/material';
+import {
+  TextField,
+  Button,
+  Tabs,
+  Tab,
+  Box,
+  CircularProgress,
+} from '@mui/material';
 import { Google } from '@mui/icons-material';
 import axios from 'axios';
 import { server } from '../environment';
@@ -9,6 +16,7 @@ import { AuthContext } from '../contexts/AuthContext';
 
 function Authentication() {
   const [tab, setTab] = useState(0);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     username: '',
@@ -23,6 +31,7 @@ function Authentication() {
   };
 
   const handleLogin = async () => {
+    setLoading(true);
     try {
       const response = await axios.post(`${server}/api/v1/users/login`, {
         username: formData.username,
@@ -35,6 +44,8 @@ function Authentication() {
     } catch (error) {
       console.error('Login failed:', error);
       alert('Login failed. Please check your credentials.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -44,6 +55,7 @@ function Authentication() {
       return;
     }
 
+    setLoading(true);
     try {
       await axios.post(`${server}/api/v1/users/register`, {
         name: formData.name,
@@ -57,6 +69,8 @@ function Authentication() {
     } catch (error) {
       console.error('Registration failed:', error);
       alert('Registration failed. Username might already exist.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -69,6 +83,7 @@ function Authentication() {
   };
 
   const handleGoogleSignIn = async () => {
+    setLoading(true);
     try {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
@@ -85,6 +100,8 @@ function Authentication() {
     } catch (error) {
       console.error('Google sign-in failed:', error);
       alert('Google sign-in failed. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -133,8 +150,15 @@ function Authentication() {
           variant="contained"
           className="mt-4"
           onClick={handleSubmit}
+          disabled={loading}
         >
-          {tab === 0 ? 'Login' : 'Register'}
+          {loading ? (
+            <CircularProgress size={24} color="inherit" />
+          ) : tab === 0 ? (
+            'Login'
+          ) : (
+            'Register'
+          )}
         </Button>
 
         <div className="text-center my-4 text-gray-500">OR</div>
@@ -142,10 +166,15 @@ function Authentication() {
         <Button
           fullWidth
           variant="outlined"
-          startIcon={<Google />}
+          startIcon={!loading && <Google />}
           onClick={handleGoogleSignIn}
+          disabled={loading}
         >
-          Continue with Google
+          {loading ? (
+            <CircularProgress size={24} />
+          ) : (
+            'Continue with Google'
+          )}
         </Button>
       </Box>
     </div>
