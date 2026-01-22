@@ -7,6 +7,8 @@ import {
   Tab,
   Box,
   CircularProgress,
+  Snackbar,
+  Alert,
 } from '@mui/material';
 import { Google } from '@mui/icons-material';
 import axios from 'axios';
@@ -17,6 +19,9 @@ import { AuthContext } from '../contexts/AuthContext';
 function Authentication() {
   const [tab, setTab] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+
   const [formData, setFormData] = useState({
     name: '',
     username: '',
@@ -30,8 +35,14 @@ function Authentication() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const showError = (message) => {
+    setError(message);
+    setOpenSnackbar(true);
+  };
+
   const handleLogin = async () => {
     setLoading(true);
+    setError('');
     try {
       const response = await axios.post(`${server}/api/v1/users/login`, {
         username: formData.username,
@@ -41,9 +52,9 @@ function Authentication() {
       const { token, user } = response.data;
       login(user, token);
       navigate('/home');
-    } catch (error) {
-      console.error('Login failed:', error);
-      alert('Login failed. Please check your credentials.');
+    } catch (err) {
+      console.error('Login failed:', err);
+      showError(err.response?.data?.message || 'Login failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -51,11 +62,12 @@ function Authentication() {
 
   const handleRegister = async () => {
     if (!formData.name || !formData.username || !formData.password) {
-      alert('Please fill in all fields');
+      showError('Please fill in all fields');
       return;
     }
 
     setLoading(true);
+    setError('');
     try {
       await axios.post(`${server}/api/v1/users/register`, {
         name: formData.name,
@@ -63,12 +75,15 @@ function Authentication() {
         password: formData.password,
       });
 
-      alert('Registration successful! Please login.');
       setTab(0);
       setFormData({ name: '', username: '', password: '' });
-    } catch (error) {
-      console.error('Registration failed:', error);
-      alert('Registration failed. Username might already exist.');
+      showError('Registration successful! Please login.');
+    } catch (err) {
+      console.error('Registration failed:', err);
+      showError(
+        err.response?.data?.message ||
+          'Registration failed. Username might already exist.'
+      );
     } finally {
       setLoading(false);
     }
@@ -84,6 +99,7 @@ function Authentication() {
 
   const handleGoogleSignIn = async () => {
     setLoading(true);
+    setError('');
     try {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
@@ -97,9 +113,12 @@ function Authentication() {
       const { token, user } = response.data;
       login(user, token);
       navigate('/home');
-    } catch (error) {
-      console.error('Google sign-in failed:', error);
-      alert('Google sign-in failed. Please try again.');
+    } catch (err) {
+      console.error('Google sign-in failed:', err);
+      showError(
+        err.response?.data?.message ||
+          'Google sign-in failed. Please try again.'
+      );
     } finally {
       setLoading(false);
     }
@@ -170,13 +189,20 @@ function Authentication() {
           onClick={handleGoogleSignIn}
           disabled={loading}
         >
-          {loading ? (
-            <CircularProgress size={24} />
-          ) : (
-            'Continue with Google'
-          )}
+          {loading ? <CircularProgress size={24} /> : 'Continue with Google'}
         </Button>
       </Box>
+
+      <Snackbar
+        open={openSnackbar}
+        autoHideDuration={6000}
+        onClose={() => setOpenSnackbar(false)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert severity="error" onClose={() => setOpenSnackbar(false)}>
+          {error}
+        </Alert>
+      </Snackbar>
     </div>
   );
 }
