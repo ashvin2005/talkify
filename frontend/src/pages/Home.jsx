@@ -409,3 +409,73 @@ function HomeComponent() {
 }
 
 export default WithAuth(HomeComponent);
+import { useContext, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { AuthContext } from '../contexts/AuthContext';
+import { Button, TextField } from '@mui/material';
+
+function Home() {
+  const { user, logout } = useContext(AuthContext);
+  const navigate = useNavigate();
+  const [meetingCode, setMeetingCode] = useState('');
+
+  const createMeeting = () => {
+    const code = Math.random().toString(36).substring(2, 10);
+    navigate(`/${code}`);
+  };
+
+  const joinMeeting = () => {
+    if (meetingCode.trim()) {
+      navigate(`/${meetingCode}`);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <nav className="bg-white shadow-md p-4">
+        <div className="container mx-auto flex justify-between items-center">
+          <h1 className="text-2xl font-bold">Talkify</h1>
+          <Button onClick={logout} variant="outlined">Logout</Button>
+        </div>
+      </nav>
+
+      <div className="container mx-auto px-4 py-20">
+        <h2 className="text-4xl font-bold text-center mb-12">
+          Welcome, {user?.name}!
+        </h2>
+
+        <div className="max-w-md mx-auto bg-white p-8 rounded-lg shadow-lg">
+          <Button
+            fullWidth
+            variant="contained"
+            size="large"
+            onClick={createMeeting}
+            className="mb-4"
+          >
+            Create New Meeting
+          </Button>
+
+          <div className="text-center my-4">OR</div>
+
+          <TextField
+            fullWidth
+            label="Enter Meeting Code"
+            value={meetingCode}
+            onChange={(e) => setMeetingCode(e.target.value)}
+            margin="normal"
+          />
+          
+          <Button
+            fullWidth
+            variant="outlined"
+            onClick={joinMeeting}
+          >
+            Join Meeting
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default Home;
