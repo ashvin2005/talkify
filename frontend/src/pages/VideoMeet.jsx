@@ -5,6 +5,7 @@ function VideoMeet() {
   const { roomCode } = useParams();
   const [joined, setJoined] = useState(false);
   const [audioEnabled, setAudioEnabled] = useState(true);
+  const [videoEnabled, setVideoEnabled] = useState(true);
 
   const localVideoRef = useRef(null);
   const localStreamRef = useRef(null);
@@ -41,6 +42,17 @@ function VideoMeet() {
     }
   };
 
+  const toggleVideo = () => {
+    const localStream = localStreamRef.current;
+    if (localStream) {
+      const videoTrack = localStream.getVideoTracks()[0];
+      if (videoTrack) {
+        videoTrack.enabled = !videoTrack.enabled;
+        setVideoEnabled(videoTrack.enabled);
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-900 flex flex-col items-center p-6">
       <h1 className="text-white text-xl mb-4">
@@ -57,14 +69,25 @@ function VideoMeet() {
         />
       </div>
 
-      <button
-        onClick={toggleAudio}
-        className={`px-4 py-2 rounded text-white ${
-          audioEnabled ? 'bg-green-600' : 'bg-red-600'
-        }`}
-      >
-        {audioEnabled ? 'Mute Mic' : 'Unmute Mic'}
-      </button>
+      <div className="flex gap-4">
+        <button
+          onClick={toggleAudio}
+          className={`px-4 py-2 rounded text-white ${
+            audioEnabled ? 'bg-green-600' : 'bg-red-600'
+          }`}
+        >
+          {audioEnabled ? 'Mute Mic' : 'Unmute Mic'}
+        </button>
+
+        <button
+          onClick={toggleVideo}
+          className={`px-4 py-2 rounded text-white ${
+            videoEnabled ? 'bg-green-600' : 'bg-red-600'
+          }`}
+        >
+          {videoEnabled ? 'Turn Camera Off' : 'Turn Camera On'}
+        </button>
+      </div>
     </div>
   );
 }
