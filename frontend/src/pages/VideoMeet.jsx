@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import io from 'socket.io-client';
+import { server } from '../environment';
 
 function VideoMeet() {
   const { roomCode } = useParams();
@@ -9,7 +11,9 @@ function VideoMeet() {
 
   const localVideoRef = useRef(null);
   const localStreamRef = useRef(null);
+  const socketRef = useRef(null);
 
+  // 🎥 Get camera + mic
   useEffect(() => {
     navigator.mediaDevices
       .getUserMedia({ video: true, audio: true })
@@ -27,6 +31,21 @@ function VideoMeet() {
     return () => {
       if (localStreamRef.current) {
         localStreamRef.current.getTracks().forEach((track) => track.stop());
+      }
+    };
+  }, []);
+
+  // 🔌 Connect to Socket.IO server
+  useEffect(() => {
+    socketRef.current = io(server);
+
+    socketRef.current.on('connect', () => {
+      console.log('Connected to server');
+    });
+
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
       }
     };
   }, []);
