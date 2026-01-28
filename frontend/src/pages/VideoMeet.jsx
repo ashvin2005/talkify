@@ -43,12 +43,23 @@ function VideoMeet() {
       console.log('Connected to server');
     });
 
+    socketRef.current.on('room-joined', (code) => {
+      console.log('Joined room:', code);
+    });
+
     return () => {
       if (socketRef.current) {
         socketRef.current.disconnect();
       }
     };
   }, []);
+
+  const joinCall = () => {
+    if (socketRef.current && !joined) {
+      socketRef.current.emit('join-call', roomCode);
+      setJoined(true);
+    }
+  };
 
   const toggleAudio = () => {
     const localStream = localStreamRef.current;
@@ -88,7 +99,7 @@ function VideoMeet() {
         />
       </div>
 
-      <div className="flex gap-4">
+      <div className="flex gap-4 mb-4">
         <button
           onClick={toggleAudio}
           className={`px-4 py-2 rounded text-white ${
@@ -107,6 +118,16 @@ function VideoMeet() {
           {videoEnabled ? 'Turn Camera Off' : 'Turn Camera On'}
         </button>
       </div>
+
+      <button
+        onClick={joinCall}
+        disabled={joined}
+        className={`px-6 py-2 rounded text-white ${
+          joined ? 'bg-gray-600' : 'bg-blue-600 hover:bg-blue-700'
+        }`}
+      >
+        {joined ? 'Joined' : 'Join Call'}
+      </button>
     </div>
   );
 }
