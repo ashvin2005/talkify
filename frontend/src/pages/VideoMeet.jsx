@@ -13,7 +13,8 @@ function VideoMeet() {
   const localStreamRef = useRef(null);
   const socketRef = useRef(null);
 
-  // 🎥 Get camera + mic
+  const peers = useRef({});
+
   useEffect(() => {
     navigator.mediaDevices
       .getUserMedia({ video: true, audio: true })
@@ -35,7 +36,7 @@ function VideoMeet() {
     };
   }, []);
 
-  // 🔌 Connect to Socket.IO server
+
   useEffect(() => {
     socketRef.current = io(server);
 
@@ -53,6 +54,37 @@ function VideoMeet() {
       }
     };
   }, []);
+
+
+  const createPeerConnection = (socketId) => {
+    const peer = new RTCPeerConnection({
+      iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
+    });
+
+    peer.onicecandidate = (event) => {
+      if (event.candidate && socketRef.current) {
+        socketRef.current.emit('signal', socketId, {
+          type: 'candidate',
+          candidate: event.candidate,
+        });
+      }
+    };
+
+    peer.ontrack = (event) => {
+
+      console.log('Remote track received', event.streams);
+    };
+
+
+    if (localStreamRef.current) {
+      localStreamRef.current.getTracks().forEach((track) => {
+        peer.addTrack(track, localStreamRef.current);
+      });
+    }
+
+    peers.current[socketId] = peer;
+    return peer;
+  };
 
   const joinCall = () => {
     if (socketRef.current && !joined) {
