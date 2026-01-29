@@ -15,6 +15,7 @@ function VideoMeet() {
 
   const peers = useRef({});
 
+
   useEffect(() => {
     navigator.mediaDevices
       .getUserMedia({ video: true, audio: true })
@@ -48,13 +49,34 @@ function VideoMeet() {
       console.log('Joined room:', code);
     });
 
+
+    socketRef.current.on('user-joined', async (socketId) => {
+      console.log('New user joined:', socketId);
+
+      const peer = createPeerConnection(socketId);
+      peers.current[socketId] = peer;
+
+      if (localStreamRef.current) {
+        localStreamRef.current.getTracks().forEach((track) => {
+          peer.addTrack(track, localStreamRef.current);
+        });
+      }
+
+      const offer = await peer.createOffer();
+      await peer.setLocalDescription(offer);
+
+      socketRef.current.emit('signal', socketId, {
+        type: 'offer',
+        offer,
+      });
+    });
+
     return () => {
       if (socketRef.current) {
         socketRef.current.disconnect();
       }
     };
   }, []);
-
 
   const createPeerConnection = (socketId) => {
     const peer = new RTCPeerConnection({
@@ -71,18 +93,9 @@ function VideoMeet() {
     };
 
     peer.ontrack = (event) => {
-
       console.log('Remote track received', event.streams);
     };
 
-
-    if (localStreamRef.current) {
-      localStreamRef.current.getTracks().forEach((track) => {
-        peer.addTrack(track, localStreamRef.current);
-      });
-    }
-
-    peers.current[socketId] = peer;
     return peer;
   };
 
