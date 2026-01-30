@@ -8,6 +8,7 @@ function VideoMeet() {
   const [joined, setJoined] = useState(false);
   const [audioEnabled, setAudioEnabled] = useState(true);
   const [videoEnabled, setVideoEnabled] = useState(true);
+  const [remoteStreams, setRemoteStreams] = useState({});
 
   const localVideoRef = useRef(null);
   const localStreamRef = useRef(null);
@@ -50,8 +51,6 @@ function VideoMeet() {
     });
 
     socketRef.current.on('user-joined', async (socketId) => {
-      console.log('New user joined:', socketId);
-
       const peer = createPeerConnection(socketId);
       peers.current[socketId] = peer;
 
@@ -69,7 +68,6 @@ function VideoMeet() {
         offer,
       });
     });
-
 
     socketRef.current.on('signal', async (fromId, message) => {
       if (message.type === 'offer') {
@@ -118,8 +116,12 @@ function VideoMeet() {
       }
     };
 
+
     peer.ontrack = (event) => {
-      console.log('Remote track received', event.streams);
+      setRemoteStreams((prev) => ({
+        ...prev,
+        [socketId]: event.streams[0],
+      }));
     };
 
     return peer;
@@ -160,6 +162,7 @@ function VideoMeet() {
         Room: {roomCode}
       </h1>
 
+
       <div className="w-80 h-60 bg-black rounded-lg overflow-hidden mb-4">
         <video
           ref={localVideoRef}
@@ -168,6 +171,21 @@ function VideoMeet() {
           playsInline
           className="w-full h-full object-cover"
         />
+      </div>
+
+
+      <div className="grid grid-cols-2 gap-4 mb-4">
+        {Object.entries(remoteStreams).map(([id, stream]) => (
+          <video
+            key={id}
+            autoPlay
+            playsInline
+            ref={(el) => {
+              if (el) el.srcObject = stream;
+            }}
+            className="w-60 h-44 bg-black rounded object-cover"
+          />
+        ))}
       </div>
 
       <div className="flex gap-4 mb-4">
