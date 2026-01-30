@@ -49,7 +49,6 @@ function VideoMeet() {
       console.log('Joined room:', code);
     });
 
-
     socketRef.current.on('user-joined', async (socketId) => {
       console.log('New user joined:', socketId);
 
@@ -69,6 +68,33 @@ function VideoMeet() {
         type: 'offer',
         offer,
       });
+    });
+
+
+    socketRef.current.on('signal', async (fromId, message) => {
+      if (message.type === 'offer') {
+        const peer = createPeerConnection(fromId);
+        peers.current[fromId] = peer;
+
+        if (localStreamRef.current) {
+          localStreamRef.current.getTracks().forEach((track) => {
+            peer.addTrack(track, localStreamRef.current);
+          });
+        }
+
+        await peer.setRemoteDescription(message.offer);
+        const answer = await peer.createAnswer();
+        await peer.setLocalDescription(answer);
+
+        socketRef.current.emit('signal', fromId, {
+          type: 'answer',
+          answer,
+        });
+      } else if (message.type === 'answer') {
+        await peers.current[fromId]?.setRemoteDescription(message.answer);
+      } else if (message.type === 'candidate') {
+        await peers.current[fromId]?.addIceCandidate(message.candidate);
+      }
     });
 
     return () => {
