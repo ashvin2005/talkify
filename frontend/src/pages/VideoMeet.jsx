@@ -10,6 +10,11 @@ function VideoMeet() {
   const [videoEnabled, setVideoEnabled] = useState(true);
   const [remoteStreams, setRemoteStreams] = useState({});
 
+
+  const [messages, setMessages] = useState([]);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [messageInput, setMessageInput] = useState('');
+
   const localVideoRef = useRef(null);
   const localStreamRef = useRef(null);
   const socketRef = useRef(null);
@@ -74,11 +79,9 @@ function VideoMeet() {
         const peer = createPeerConnection(fromId);
         peers.current[fromId] = peer;
 
-        if (localStreamRef.current) {
-          localStreamRef.current.getTracks().forEach((track) => {
-            peer.addTrack(track, localStreamRef.current);
-          });
-        }
+        localStreamRef.current.getTracks().forEach((track) => {
+          peer.addTrack(track, localStreamRef.current);
+        });
 
         await peer.setRemoteDescription(message.offer);
         const answer = await peer.createAnswer();
@@ -93,6 +96,11 @@ function VideoMeet() {
       } else if (message.type === 'candidate') {
         await peers.current[fromId]?.addIceCandidate(message.candidate);
       }
+    });
+
+
+    socketRef.current.on('chat-message', (data, sender, socketId) => {
+      setMessages((prev) => [...prev, { sender, data, socketId }]);
     });
 
     return () => {
@@ -116,7 +124,6 @@ function VideoMeet() {
       }
     };
 
-
     peer.ontrack = (event) => {
       setRemoteStreams((prev) => ({
         ...prev,
@@ -127,6 +134,13 @@ function VideoMeet() {
     return peer;
   };
 
+  const sendMessage = () => {
+    if (!messageInput.trim()) return;
+
+    socketRef.current.emit('chat-message', messageInput, 'You');
+    setMessageInput('');
+  };
+
   const joinCall = () => {
     if (socketRef.current && !joined) {
       socketRef.current.emit('join-call', roomCode);
@@ -135,88 +149,90 @@ function VideoMeet() {
   };
 
   const toggleAudio = () => {
-    const localStream = localStreamRef.current;
-    if (localStream) {
-      const audioTrack = localStream.getAudioTracks()[0];
-      if (audioTrack) {
-        audioTrack.enabled = !audioTrack.enabled;
-        setAudioEnabled(audioTrack.enabled);
-      }
-    }
+    const audioTrack = localStreamRef.current.getAudioTracks()[0];
+    audioTrack.enabled = !audioTrack.enabled;
+    setAudioEnabled(audioTrack.enabled);
   };
 
   const toggleVideo = () => {
-    const localStream = localStreamRef.current;
-    if (localStream) {
-      const videoTrack = localStream.getVideoTracks()[0];
-      if (videoTrack) {
-        videoTrack.enabled = !videoTrack.enabled;
-        setVideoEnabled(videoTrack.enabled);
-      }
-    }
+    const videoTrack = localStreamRef.current.getVideoTracks()[0];
+    videoTrack.enabled = !videoTrack.enabled;
+    setVideoEnabled(videoTrack.enabled);
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 flex flex-col items-center p-6">
-      <h1 className="text-white text-xl mb-4">
-        Room: {roomCode}
-      </h1>
+    <div className="min-h-screen bg-gray-900 flex">
 
+      <div className="flex-1 flex flex-col items-center p-6">
+        <h1 className="text-white text-xl mb-4">Room: {roomCode}</h1>
 
-      <div className="w-80 h-60 bg-black rounded-lg overflow-hidden mb-4">
         <video
           ref={localVideoRef}
           autoPlay
           muted
           playsInline
-          className="w-full h-full object-cover"
+          className="w-80 h-60 bg-black rounded mb-4"
         />
-      </div>
 
+        <div className="grid grid-cols-2 gap-4 mb-4">
+          {Object.entries(remoteStreams).map(([id, stream]) => (
+            <video
+              key={id}
+              autoPlay
+              playsInline
+              ref={(el) => el && (el.srcObject = stream)}
+              className="w-60 h-44 bg-black rounded"
+            />
+          ))}
+        </div>
 
-      <div className="grid grid-cols-2 gap-4 mb-4">
-        {Object.entries(remoteStreams).map(([id, stream]) => (
-          <video
-            key={id}
-            autoPlay
-            playsInline
-            ref={(el) => {
-              if (el) el.srcObject = stream;
-            }}
-            className="w-60 h-44 bg-black rounded object-cover"
-          />
-        ))}
-      </div>
-
-      <div className="flex gap-4 mb-4">
-        <button
-          onClick={toggleAudio}
-          className={`px-4 py-2 rounded text-white ${
-            audioEnabled ? 'bg-green-600' : 'bg-red-600'
-          }`}
-        >
-          {audioEnabled ? 'Mute Mic' : 'Unmute Mic'}
-        </button>
+        <div className="flex gap-4 mb-4">
+          <button onClick={toggleAudio} className="px-4 py-2 bg-gray-700 text-white rounded">
+            {audioEnabled ? 'Mute Mic' : 'Unmute Mic'}
+          </button>
+          <button onClick={toggleVideo} className="px-4 py-2 bg-gray-700 text-white rounded">
+            {videoEnabled ? 'Camera Off' : 'Camera On'}
+          </button>
+          <button onClick={() => setChatOpen(!chatOpen)} className="px-4 py-2 bg-blue-600 text-white rounded">
+            Chat
+          </button>
+        </div>
 
         <button
-          onClick={toggleVideo}
-          className={`px-4 py-2 rounded text-white ${
-            videoEnabled ? 'bg-green-600' : 'bg-red-600'
-          }`}
+          onClick={joinCall}
+          disabled={joined}
+          className="px-6 py-2 bg-green-600 text-white rounded"
         >
-          {videoEnabled ? 'Turn Camera Off' : 'Turn Camera On'}
+          {joined ? 'Joined' : 'Join Call'}
         </button>
       </div>
 
-      <button
-        onClick={joinCall}
-        disabled={joined}
-        className={`px-6 py-2 rounded text-white ${
-          joined ? 'bg-gray-600' : 'bg-blue-600 hover:bg-blue-700'
-        }`}
-      >
-        {joined ? 'Joined' : 'Join Call'}
-      </button>
+
+      {chatOpen && (
+        <div className="w-80 bg-gray-800 p-4 flex flex-col">
+          <h2 className="text-white mb-2">Chat</h2>
+
+          <div className="flex-1 overflow-y-auto mb-2">
+            {messages.map((msg, idx) => (
+              <div key={idx} className="text-white text-sm mb-1">
+                <strong>{msg.sender}:</strong> {msg.data}
+              </div>
+            ))}
+          </div>
+
+          <div className="flex gap-2">
+            <input
+              value={messageInput}
+              onChange={(e) => setMessageInput(e.target.value)}
+              className="flex-1 px-2 py-1 rounded"
+              placeholder="Type a message..."
+            />
+            <button onClick={sendMessage} className="px-3 py-1 bg-blue-600 text-white rounded">
+              Send
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
