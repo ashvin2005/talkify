@@ -11,7 +11,6 @@ function VideoMeet() {
   const [videoEnabled, setVideoEnabled] = useState(true);
   const [remoteStreams, setRemoteStreams] = useState({});
 
-
   const [messages, setMessages] = useState([]);
   const [chatOpen, setChatOpen] = useState(false);
   const [messageInput, setMessageInput] = useState('');
@@ -21,6 +20,7 @@ function VideoMeet() {
   const socketRef = useRef(null);
   const peers = useRef({});
 
+
   useEffect(() => {
     navigator.mediaDevices
       .getUserMedia({ video: true, audio: true })
@@ -28,15 +28,12 @@ function VideoMeet() {
         localVideoRef.current.srcObject = stream;
         localStreamRef.current = stream;
       })
-      .catch(() => {
-        alert('Camera or microphone access denied');
-      });
+      .catch(() => alert('Camera or microphone access denied'));
 
     return () => {
       localStreamRef.current?.getTracks().forEach((t) => t.stop());
     };
   }, []);
-
 
   useEffect(() => {
     socketRef.current = io(server);
@@ -106,11 +103,24 @@ function VideoMeet() {
       }
     });
 
+
+    socketRef.current.on('user-left', (socketId) => {
+      if (peers.current[socketId]) {
+        peers.current[socketId].close();
+        delete peers.current[socketId];
+      }
+
+      setRemoteStreams((prev) => {
+        const updated = { ...prev };
+        delete updated[socketId];
+        return updated;
+      });
+    });
+
     return () => {
       socketRef.current.disconnect();
     };
   }, []);
-
 
   const createPeerConnection = (socketId) => {
     const peer = new RTCPeerConnection({
@@ -136,13 +146,11 @@ function VideoMeet() {
     return peer;
   };
 
-
   const sendMessage = () => {
     if (!messageInput.trim()) return;
     socketRef.current.emit('chat-message', messageInput, 'You');
     setMessageInput('');
   };
-
 
   const joinCall = () => {
     socketRef.current.emit('join-call', roomCode);
@@ -164,10 +172,9 @@ function VideoMeet() {
 
   return (
     <div className="min-h-screen bg-gray-900 flex">
-
+      {/* MAIN */}
       <div className="flex-1 flex flex-col items-center p-6">
         <h1 className="text-white text-xl mb-4">Room: {roomCode}</h1>
-
 
         <video
           ref={localVideoRef}
@@ -176,7 +183,6 @@ function VideoMeet() {
           playsInline
           className="w-80 h-60 bg-black rounded mb-4"
         />
-
 
         <div className="grid grid-cols-2 gap-4 mb-4">
           {Object.entries(remoteStreams).map(([id, stream]) => (
@@ -189,7 +195,6 @@ function VideoMeet() {
             />
           ))}
         </div>
-
 
         <div className="flex gap-4 mb-4">
           <button onClick={toggleAudio} className="px-4 py-2 bg-gray-700 text-white rounded">
