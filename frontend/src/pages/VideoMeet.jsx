@@ -5,6 +5,7 @@ import { server } from '../environment';
 
 function VideoMeet() {
   const { roomCode } = useParams();
+
   const [joined, setJoined] = useState(false);
   const [audioEnabled, setAudioEnabled] = useState(true);
   const [videoEnabled, setVideoEnabled] = useState(true);
@@ -18,28 +19,21 @@ function VideoMeet() {
   const localVideoRef = useRef(null);
   const localStreamRef = useRef(null);
   const socketRef = useRef(null);
-
   const peers = useRef({});
-
 
   useEffect(() => {
     navigator.mediaDevices
       .getUserMedia({ video: true, audio: true })
       .then((stream) => {
-        if (localVideoRef.current) {
-          localVideoRef.current.srcObject = stream;
-        }
+        localVideoRef.current.srcObject = stream;
         localStreamRef.current = stream;
       })
-      .catch((err) => {
-        console.error('Error accessing media devices:', err);
+      .catch(() => {
         alert('Camera or microphone access denied');
       });
 
     return () => {
-      if (localStreamRef.current) {
-        localStreamRef.current.getTracks().forEach((track) => track.stop());
-      }
+      localStreamRef.current?.getTracks().forEach((t) => t.stop());
     };
   }, []);
 
@@ -55,15 +49,24 @@ function VideoMeet() {
       console.log('Joined room:', code);
     });
 
+
+    socketRef.current.on('chat-history', (history) => {
+      setMessages(history);
+    });
+
+
+    socketRef.current.on('chat-message', (data, sender, socketId) => {
+      setMessages((prev) => [...prev, { sender, data, socketId }]);
+    });
+
+
     socketRef.current.on('user-joined', async (socketId) => {
       const peer = createPeerConnection(socketId);
       peers.current[socketId] = peer;
 
-      if (localStreamRef.current) {
-        localStreamRef.current.getTracks().forEach((track) => {
-          peer.addTrack(track, localStreamRef.current);
-        });
-      }
+      localStreamRef.current.getTracks().forEach((track) => {
+        peer.addTrack(track, localStreamRef.current);
+      });
 
       const offer = await peer.createOffer();
       await peer.setLocalDescription(offer);
@@ -73,6 +76,7 @@ function VideoMeet() {
         offer,
       });
     });
+
 
     socketRef.current.on('signal', async (fromId, message) => {
       if (message.type === 'offer') {
@@ -91,24 +95,22 @@ function VideoMeet() {
           type: 'answer',
           answer,
         });
-      } else if (message.type === 'answer') {
+      }
+
+      if (message.type === 'answer') {
         await peers.current[fromId]?.setRemoteDescription(message.answer);
-      } else if (message.type === 'candidate') {
+      }
+
+      if (message.type === 'candidate') {
         await peers.current[fromId]?.addIceCandidate(message.candidate);
       }
     });
 
-
-    socketRef.current.on('chat-message', (data, sender, socketId) => {
-      setMessages((prev) => [...prev, { sender, data, socketId }]);
-    });
-
     return () => {
-      if (socketRef.current) {
-        socketRef.current.disconnect();
-      }
+      socketRef.current.disconnect();
     };
   }, []);
+
 
   const createPeerConnection = (socketId) => {
     const peer = new RTCPeerConnection({
@@ -116,7 +118,7 @@ function VideoMeet() {
     });
 
     peer.onicecandidate = (event) => {
-      if (event.candidate && socketRef.current) {
+      if (event.candidate) {
         socketRef.current.emit('signal', socketId, {
           type: 'candidate',
           candidate: event.candidate,
@@ -134,37 +136,38 @@ function VideoMeet() {
     return peer;
   };
 
+
   const sendMessage = () => {
     if (!messageInput.trim()) return;
-
     socketRef.current.emit('chat-message', messageInput, 'You');
     setMessageInput('');
   };
 
+
   const joinCall = () => {
-    if (socketRef.current && !joined) {
-      socketRef.current.emit('join-call', roomCode);
-      setJoined(true);
-    }
+    socketRef.current.emit('join-call', roomCode);
+    setJoined(true);
   };
 
   const toggleAudio = () => {
-    const audioTrack = localStreamRef.current.getAudioTracks()[0];
-    audioTrack.enabled = !audioTrack.enabled;
-    setAudioEnabled(audioTrack.enabled);
+    const track = localStreamRef.current.getAudioTracks()[0];
+    track.enabled = !track.enabled;
+    setAudioEnabled(track.enabled);
   };
 
   const toggleVideo = () => {
-    const videoTrack = localStreamRef.current.getVideoTracks()[0];
-    videoTrack.enabled = !videoTrack.enabled;
-    setVideoEnabled(videoTrack.enabled);
+    const track = localStreamRef.current.getVideoTracks()[0];
+    track.enabled = !track.enabled;
+    setVideoEnabled(track.enabled);
   };
+
 
   return (
     <div className="min-h-screen bg-gray-900 flex">
 
       <div className="flex-1 flex flex-col items-center p-6">
         <h1 className="text-white text-xl mb-4">Room: {roomCode}</h1>
+
 
         <video
           ref={localVideoRef}
@@ -173,6 +176,7 @@ function VideoMeet() {
           playsInline
           className="w-80 h-60 bg-black rounded mb-4"
         />
+
 
         <div className="grid grid-cols-2 gap-4 mb-4">
           {Object.entries(remoteStreams).map(([id, stream]) => (
@@ -186,14 +190,20 @@ function VideoMeet() {
           ))}
         </div>
 
+
         <div className="flex gap-4 mb-4">
           <button onClick={toggleAudio} className="px-4 py-2 bg-gray-700 text-white rounded">
             {audioEnabled ? 'Mute Mic' : 'Unmute Mic'}
           </button>
+
           <button onClick={toggleVideo} className="px-4 py-2 bg-gray-700 text-white rounded">
             {videoEnabled ? 'Camera Off' : 'Camera On'}
           </button>
-          <button onClick={() => setChatOpen(!chatOpen)} className="px-4 py-2 bg-blue-600 text-white rounded">
+
+          <button
+            onClick={() => setChatOpen(!chatOpen)}
+            className="px-4 py-2 bg-blue-600 text-white rounded"
+          >
             Chat
           </button>
         </div>
@@ -213,8 +223,8 @@ function VideoMeet() {
           <h2 className="text-white mb-2">Chat</h2>
 
           <div className="flex-1 overflow-y-auto mb-2">
-            {messages.map((msg, idx) => (
-              <div key={idx} className="text-white text-sm mb-1">
+            {messages.map((msg, i) => (
+              <div key={i} className="text-white text-sm mb-1">
                 <strong>{msg.sender}:</strong> {msg.data}
               </div>
             ))}
