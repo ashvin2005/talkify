@@ -17,6 +17,9 @@ function VideoMeet() {
   const [chatOpen, setChatOpen] = useState(false);
   const [messageInput, setMessageInput] = useState('');
 
+
+  const [copied, setCopied] = useState(false);
+
   const localVideoRef = useRef(null);
   const localStreamRef = useRef(null);
   const socketRef = useRef(null);
@@ -49,16 +52,13 @@ function VideoMeet() {
       console.log('Joined room:', code);
     });
 
-
     socketRef.current.on('chat-history', (history) => {
       setMessages(history);
     });
 
-
     socketRef.current.on('chat-message', (data, sender, socketId) => {
       setMessages((prev) => [...prev, { sender, data, socketId }]);
     });
-
 
     socketRef.current.on('user-joined', async (socketId) => {
       const peer = createPeerConnection(socketId);
@@ -76,7 +76,6 @@ function VideoMeet() {
         offer,
       });
     });
-
 
     socketRef.current.on('signal', async (fromId, message) => {
       if (message.type === 'offer') {
@@ -105,7 +104,6 @@ function VideoMeet() {
         await peers.current[fromId]?.addIceCandidate(message.candidate);
       }
     });
-
 
     socketRef.current.on('user-left', (socketId) => {
       if (peers.current[socketId]) {
@@ -157,6 +155,7 @@ function VideoMeet() {
     setMessageInput('');
   };
 
+
   const joinCall = () => {
     socketRef.current.emit('join-call', roomCode);
     setJoined(true);
@@ -174,24 +173,37 @@ function VideoMeet() {
     setVideoEnabled(track.enabled);
   };
 
-
   const endCall = () => {
     Object.values(peers.current).forEach((peer) => peer.close());
     peers.current = {};
 
     localStreamRef.current?.getTracks().forEach((track) => track.stop());
-
     socketRef.current?.disconnect();
 
     navigate('/home');
   };
 
 
+  const copyMeetingCode = () => {
+    navigator.clipboard.writeText(roomCode);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+
   return (
     <div className="min-h-screen bg-gray-900 flex">
-
       <div className="flex-1 flex flex-col items-center p-6">
-        <h1 className="text-white text-xl mb-4">Room: {roomCode}</h1>
+        <div className="flex items-center gap-3 mb-4">
+          <h1 className="text-white text-xl">Room: {roomCode}</h1>
+          <button
+            onClick={copyMeetingCode}
+            className="px-3 py-1 bg-gray-700 text-white rounded text-sm"
+          >
+            Copy
+          </button>
+          {copied && <span className="text-green-400 text-sm">Copied!</span>}
+        </div>
 
         <video
           ref={localVideoRef}
@@ -245,7 +257,6 @@ function VideoMeet() {
           {joined ? 'Joined' : 'Join Call'}
         </button>
       </div>
-
 
       {chatOpen && (
         <div className="w-80 bg-gray-800 p-4 flex flex-col">
