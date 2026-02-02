@@ -1,15 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import io from 'socket.io-client';
 import { server } from '../environment';
 
 function VideoMeet() {
   const { roomCode } = useParams();
+  const navigate = useNavigate();
 
   const [joined, setJoined] = useState(false);
   const [audioEnabled, setAudioEnabled] = useState(true);
   const [videoEnabled, setVideoEnabled] = useState(true);
   const [remoteStreams, setRemoteStreams] = useState({});
+
 
   const [messages, setMessages] = useState([]);
   const [chatOpen, setChatOpen] = useState(false);
@@ -34,6 +36,7 @@ function VideoMeet() {
       localStreamRef.current?.getTracks().forEach((t) => t.stop());
     };
   }, []);
+
 
   useEffect(() => {
     socketRef.current = io(server);
@@ -122,6 +125,7 @@ function VideoMeet() {
     };
   }, []);
 
+
   const createPeerConnection = (socketId) => {
     const peer = new RTCPeerConnection({
       iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
@@ -145,6 +149,7 @@ function VideoMeet() {
 
     return peer;
   };
+
 
   const sendMessage = () => {
     if (!messageInput.trim()) return;
@@ -170,9 +175,21 @@ function VideoMeet() {
   };
 
 
+  const endCall = () => {
+    Object.values(peers.current).forEach((peer) => peer.close());
+    peers.current = {};
+
+    localStreamRef.current?.getTracks().forEach((track) => track.stop());
+
+    socketRef.current?.disconnect();
+
+    navigate('/home');
+  };
+
+
   return (
     <div className="min-h-screen bg-gray-900 flex">
-      {/* MAIN */}
+
       <div className="flex-1 flex flex-col items-center p-6">
         <h1 className="text-white text-xl mb-4">Room: {roomCode}</h1>
 
@@ -210,6 +227,13 @@ function VideoMeet() {
             className="px-4 py-2 bg-blue-600 text-white rounded"
           >
             Chat
+          </button>
+
+          <button
+            onClick={endCall}
+            className="px-4 py-2 bg-red-600 text-white rounded"
+          >
+            End Call
           </button>
         </div>
 
