@@ -13,6 +13,7 @@ function HomeComponent() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [activeUsers, setActiveUsers] = useState(0);
 
+
   useEffect(() => {
     const interval = setInterval(() => {
       setActiveUsers(Math.floor(Math.random() * 5000) + 1000);
@@ -41,15 +42,19 @@ function HomeComponent() {
     const part2 = generateGroup(4);
     const part3 = generateGroup(3);
 
+
     const meetingLink = `${part1}-${part2}-${part3}`;
 
     setMeetingCode(meetingLink);
     setIsGenerating(false);
     
+
     navigate(`/${meetingLink}`);
     
+
     addToUserHistory(meetingLink).catch(error => {
        console.error("Background - Error adding meeting to history:", error);
+
     });
   };
   
@@ -57,10 +62,10 @@ function HomeComponent() {
   const handleJoinVideoCall = () => {
     if (!meetingCode.trim()) return;
 
-    // Optimistic navigation
+
     navigate(`/${meetingCode}`);
     
-    // Add to history in background
+
     addToUserHistory(meetingCode).catch(error => {
       console.error("Background - Error joining meeting:", error);
     });
@@ -68,7 +73,7 @@ function HomeComponent() {
 
   return (
     <div className="min-h-screen flex flex-col bg-black overflow-hidden">
-      {/* Particle Background */}
+
       <div className="absolute inset-0 z-0">
         <Particles
           id="tsparticles"
@@ -112,11 +117,11 @@ function HomeComponent() {
         />
       </div>
 
-      {/* Glow Effects */}
+
       <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-purple-500 rounded-full filter blur-3xl opacity-10 -z-10"></div>
       <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-blue-500 rounded-full filter blur-3xl opacity-10 -z-10"></div>
 
-      {/* Navbar */}
+
       <nav className="flex justify-between items-center px-8 py-6 z-10">
         <div className="text-3xl font-bold text-white">
           <span className="text-purple-400"></span> Talk
@@ -156,9 +161,9 @@ function HomeComponent() {
         </div>
       </nav>
 
-      {/* Main Content */}
+
       <main className="flex-1 flex flex-col lg:flex-row items-center justify-center px-6 py-12 md:px-16 z-10">
-        {/* Left Panel - Form */}
+
         <div className="w-full lg:w-1/2 max-w-2xl space-y-10">
           <div className="space-y-6">
             <h1 className="text-5xl md:text-6xl font-bold text-white leading-tight">
@@ -280,7 +285,7 @@ function HomeComponent() {
             </div>
           </div>
 
-          {/* Active Users Counter */}
+
           <div className="mt-12 p-6 bg-gradient-to-br from-purple-900/30 to-blue-900/30 rounded-xl border-2 border-purple-500/30 backdrop-blur-sm shadow-lg">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
@@ -297,15 +302,15 @@ function HomeComponent() {
           </div>
         </div>
 
-        {/* Right Panel - Visual Element */}
+
         <div className="w-full lg:w-1/2 flex justify-center items-center mt-16 lg:mt-0">
           <div className="relative w-full max-w-xl">
-            {/* Floating Conference Room */}
+
             <div className="relative">
-              {/* Main screen */}
+
               <div className="bg-gray-900/80 border-2 border-purple-500/30 rounded-3xl p-1 shadow-2xl transform rotate-1">
                 <div className="bg-gray-900 rounded-2xl overflow-hidden h-96 w-full relative">
-                  {/* Grid of participants */}
+
                   <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 gap-1 p-1">
                     {[...Array(9)].map((_, i) => (
                       <div
@@ -340,12 +345,12 @@ function HomeComponent() {
                     ))}
                   </div>
 
-                  {/* Spotlight effect */}
+
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none"></div>
                 </div>
               </div>
 
-              {/* Floating controls */}
+
               <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-4">
                 <div className="bg-gray-900 border border-purple-500/30 rounded-full p-3 shadow-lg">
                   <svg
@@ -397,7 +402,7 @@ function HomeComponent() {
                 </div>
               </div>
 
-              {/* Floating elements */}
+
               <div className="absolute -top-6 -left-6 w-16 h-16 bg-purple-500 rounded-full opacity-20 animate-float-delay-1"></div>
               <div className="absolute -bottom-4 -right-4 w-20 h-20 bg-blue-500 rounded-full opacity-20 animate-float-delay-2"></div>
             </div>
@@ -409,73 +414,3 @@ function HomeComponent() {
 }
 
 export default WithAuth(HomeComponent);
-import { useContext, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { AuthContext } from '../contexts/AuthContext';
-import { Button, TextField } from '@mui/material';
-
-function Home() {
-  const { user, logout } = useContext(AuthContext);
-  const navigate = useNavigate();
-  const [meetingCode, setMeetingCode] = useState('');
-
-  const createMeeting = () => {
-    const code = Math.random().toString(36).substring(2, 10);
-    navigate(`/${code}`);
-  };
-
-  const joinMeeting = () => {
-    if (meetingCode.trim()) {
-      navigate(`/${meetingCode}`);
-    }
-  };
-
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-md p-4">
-        <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Talkify</h1>
-          <Button onClick={logout} variant="outlined">Logout</Button>
-        </div>
-      </nav>
-
-      <div className="container mx-auto px-4 py-20">
-        <h2 className="text-4xl font-bold text-center mb-12">
-          Welcome, {user?.name}!
-        </h2>
-
-        <div className="max-w-md mx-auto bg-white p-8 rounded-lg shadow-lg">
-          <Button
-            fullWidth
-            variant="contained"
-            size="large"
-            onClick={createMeeting}
-            className="mb-4"
-          >
-            Create New Meeting
-          </Button>
-
-          <div className="text-center my-4">OR</div>
-
-          <TextField
-            fullWidth
-            label="Enter Meeting Code"
-            value={meetingCode}
-            onChange={(e) => setMeetingCode(e.target.value)}
-            margin="normal"
-          />
-          
-          <Button
-            fullWidth
-            variant="outlined"
-            onClick={joinMeeting}
-          >
-            Join Meeting
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export default Home;
