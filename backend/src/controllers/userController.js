@@ -1,80 +1,82 @@
-import { db } from '../firebase.js';
+import httpStatus from "http-status";
+import { db } from "../firebase.js";
+import bcrypt from "bcrypt";
+import crypto from "crypto";
+import { admin } from "../firebase.js";
 
-export const getHealth = async (req, res) => {
-  try {
-    res.status(200).json({ message: 'User service healthy' });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-
-import bcrypt from 'bcrypt';
-import crypto from 'crypto';
 
 export const register = async (req, res) => {
   const { name, username, password } = req.body;
 
   if (!name || !username || !password) {
-    return res.status(400).json({ message: 'All fields required' });
+    return res.status(400).json({ message: "Please provide all fields" });
   }
 
   try {
-    const userRef = db.collection('users').doc(username);
-    const userSnap = await userRef.get();
-
+    const userSnap = await db.collection("users").doc(username).get();
     if (userSnap.exists) {
-      return res.status(409).json({ message: 'User already exists' });
+      return res
+        .status(httpStatus.FOUND)
+        .json({ message: "User already exists" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    await userRef.set({
+    await db.collection("users").doc(username).set({
       name,
       username,
       password: hashedPassword,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      token: "",
     });
 
-    res.status(201).json({ message: 'User registered successfully' });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+    return res.status(httpStatus.CREATED).json({ message: "User registered" });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({ message: `Something went wrong: ${e}` });
   }
 };
-
 
 
 export const login = async (req, res) => {
   const { username, password } = req.body;
 
   if (!username || !password) {
-    return res.status(400).json({ message: 'Username and password required' });
+    return res.status(400).json({ message: "Please provide all fields" });
   }
 
   try {
-    const userRef = db.collection('users').doc(username);
+    const userRef = db.collection("users").doc(username);
     const userSnap = await userRef.get();
 
     if (!userSnap.exists) {
-      return res.status(404).json({ message: 'User not found' });
+      return res
+        .status(httpStatus.NOT_FOUND)
+        .json({ message: "User not found" });
     }
 
     const userData = userSnap.data();
-    const isValid = await bcrypt.compare(password, userData.password);
+    const isPasswordCorrect = await bcrypt.compare(password, userData.password);
 
-    if (!isValid) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+    if (isPasswordCorrect) {
+      const token = crypto.randomBytes(20).toString("hex");
+
+      await userRef.update({ token });
+
+      return res.status(httpStatus.OK).json({
+        token,
+        user: {
+          username: userData.username,
+          name: userData.name,
+        },
+      });
+    } else {
+      return res
+        .status(httpStatus.UNAUTHORIZED)
+        .json({ message: "Invalid username or password" });
     }
-
-    const token = crypto.randomBytes(20).toString('hex');
-    await userRef.update({ token });
-
-    res.status(200).json({
-      token,
-      user: { username: userData.username, name: userData.name },
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({ message: `Something went wrong: ${e}` });
   }
 };
 
@@ -83,43 +85,67 @@ export const googleAuth = async (req, res) => {
   const { idToken } = req.body;
 
   if (!idToken) {
-    return res.status(400).json({ message: 'ID token required' });
+    return res.status(400).json({ message: "ID token is required" });
   }
 
   try {
     const decodedToken = await admin.auth().verifyIdToken(idToken);
-    const { uid, email, name, picture } = decodedToken;
-    const username = email.split('@')[0];
 
-    const userRef = db.collection('users').doc(username);
+
+    const { uid, email, name, picture } = decodedToken;
+    const username = email.split("@")[0];
+
+    const userRef = db.collection("users").doc(username);
     const userSnap = await userRef.get();
 
-    let token = crypto.randomBytes(20).toString('hex');
-
+    let token;
     if (!userSnap.exists) {
+
+      token = crypto.randomBytes(20).toString("hex");
       await userRef.set({
         uid,
         name: name || username,
         username,
         email,
-        photoURL: picture || '',
+        photoURL: picture || "",
         token,
-        authProvider: 'google',
+        authProvider: "google",
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        lastLogin: admin.firestore.FieldValue.serverTimestamp(),
       });
     } else {
-      await userRef.update({ token });
+
+      const userData = userSnap.data();
+      const tokenAge =
+        Date.now() - (userData.lastLogin?.toDate()?.getTime() || 0);
+      const tokenMaxAge = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+      token =
+        userData.token && tokenAge < tokenMaxAge
+          ? userData.token
+          : crypto.randomBytes(20).toString("hex");
+
+      await userRef.update({
+        token,
+        lastLogin: admin.firestore.FieldValue.serverTimestamp(),
+      });
     }
 
-    res.status(200).json({
+    return res.status(httpStatus.OK).json({
       token,
-      user: { username, name: name || username, photoURL: picture || '' },
+      user: {
+        username,
+        name: name || username,
+        photoURL: picture || "",
+      },
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Google auth error:", error);
+    return res.status(500).json({
+      message: `Authentication failed: ${error.message}`,
+    });
   }
 };
-
 
 
 export const verifyToken = async (req, res) => {
@@ -163,7 +189,6 @@ export const verifyToken = async (req, res) => {
 };
 
 
-
 export const addToHistory = async (req, res) => {
   const { token, meeting_code } = req.body;
 
@@ -188,6 +213,7 @@ export const addToHistory = async (req, res) => {
 
     const user = usersQuery.docs[0].data();
 
+
     await db.collection("meetings").add({
       user_id: user.username,
       meetingCode: meeting_code,
@@ -197,6 +223,47 @@ export const addToHistory = async (req, res) => {
     return res
       .status(httpStatus.CREATED)
       .json({ message: "Added code to history" });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({ message: `Something went wrong: ${e}` });
+  }
+};
+
+
+export const getUserHistory = async (req, res) => {
+  const { token } = req.query;
+
+  if (!token) {
+    return res.status(400).json({ message: "Please provide token" });
+  }
+
+  try {
+
+    const usersQuery = await db
+      .collection("users")
+      .where("token", "==", token)
+      .get();
+
+    if (usersQuery.empty) {
+      return res
+        .status(httpStatus.NOT_FOUND)
+        .json({ message: "User not found" });
+    }
+
+    const user = usersQuery.docs[0].data();
+
+    const meetingsSnapshot = await db
+      .collection("meetings")
+      .where("user_id", "==", user.username)
+      .orderBy("createdAt", "desc")
+      .get();
+
+    const meetings = meetingsSnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    return res.status(httpStatus.OK).json(meetings);
   } catch (e) {
     console.error(e);
     return res.status(500).json({ message: `Something went wrong: ${e}` });
