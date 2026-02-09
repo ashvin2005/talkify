@@ -90,6 +90,7 @@ export default function VideoMeetComponent() {
   const [showJoinDialog, setShowJoinDialog] = useState(false);
 
 
+
   const [reactions, setReactions] = useState([]);
   const [handRaised, setHandRaised] = useState(false);
   const [showReactionMenu, setShowReactionMenu] = useState(false);
@@ -101,6 +102,7 @@ export default function VideoMeetComponent() {
   const particlesInit = async (engine) => {
     await loadSlim(engine);
   };
+
 
   useEffect(() => {
     const pathParts = window.location.pathname.split("/");
@@ -114,6 +116,7 @@ export default function VideoMeetComponent() {
     setMeetingCode(code);
     setShowJoinDialog(true);
   }, [navigate]);
+
 
   useEffect(() => {
     let timer;
@@ -150,7 +153,7 @@ export default function VideoMeetComponent() {
 
   const toggleHandRaise = () => {
     setHandRaised(!handRaised);
-    showSnackbar(handRaised ? "Hand lowered" : "Hand raised ✋", "success");
+    showSnackbar(handRaised ? "Hand lowered" : "Hand raised", "success");
   };
 
 
@@ -228,6 +231,7 @@ export default function VideoMeetComponent() {
     setSnackbarOpen(false);
   };
 
+
   const setVideoRef = React.useCallback((node) => {
     localVideoref.current = node;
     if (node && window.localStream) {
@@ -252,7 +256,6 @@ export default function VideoMeetComponent() {
 
 
     connectToSocketServer();
-
     if (!window.localStream || !window.localStream.active) {
       getUserMedia();
     } else {
@@ -268,7 +271,7 @@ export default function VideoMeetComponent() {
         });
         videoStream.getTracks().forEach((track) => track.stop());
         setVideoAvailable(true);
-        setVideo(true); 
+        setVideo(true);
       } catch (err) {
         console.warn("Video permissions denied:", err);
         setVideoAvailable(false);
@@ -504,7 +507,7 @@ export default function VideoMeetComponent() {
           if (existingParticipants.has(clientId)) {
             return {
               ...existingParticipants.get(clientId),
-              name: clientName 
+              name: clientName
             };
           }
 
@@ -817,11 +820,13 @@ export default function VideoMeetComponent() {
     }
   }, [messages]);
 
+
   useEffect(() => {
     if (showJoinDialog) {
       getPermissions();
     }
   }, [showJoinDialog]);
+
 
   useEffect(() => {
     const handlePiPChange = () => {
@@ -1176,7 +1181,7 @@ export default function VideoMeetComponent() {
           )}
 
           <div className="flex-1 relative bg-black">
-            {/* Meeting Code Card - Enhanced */}
+
             <div className="absolute top-4 left-4 z-10 glass-effect rounded-xl px-4 py-3 shadow-2xl flex items-center space-x-3 border border-purple-500/30 animate-fade-in">
               <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
                 <Info className="text-purple-400" fontSize="medium" />
@@ -1195,7 +1200,7 @@ export default function VideoMeetComponent() {
               </button>
             </div>
 
-            {/* Timer and Controls - Enhanced */}
+
             <div className="absolute top-4 right-4 z-10 flex items-center space-x-2 animate-fade-in">
               <div className="glass-effect rounded-xl px-4 py-2 shadow-lg border border-purple-500/30">
                 <div className="flex items-center space-x-2">
@@ -1345,7 +1350,7 @@ export default function VideoMeetComponent() {
             )}
           </div>
 
-          {/* Enhanced Control Bar with Larger Buttons */}
+
           <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-30">
             <div className="glass-effect rounded-2xl px-6 py-4 flex items-center space-x-4 shadow-2xl border-2 border-purple-500/30 animate-fade-in-scale">
               <Tooltip title={video ? "Turn off camera" : "Turn on camera"}>
@@ -1509,6 +1514,7 @@ export default function VideoMeetComponent() {
 
 
             </div>
+
 
             {showReactionMenu && (
               <div className="fixed bottom-28 right-28 z-50 glass-effect rounded-2xl p-4 shadow-2xl border border-purple-500/30 animate-fade-in-scale">
