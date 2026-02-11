@@ -1,8 +1,7 @@
 import httpStatus from "http-status";
-import { db } from "../firebase.js";
+import { db, admin } from "../firebase.js";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
-import { admin } from "../firebase.js";
 
 
 export const register = async (req, res) => {
