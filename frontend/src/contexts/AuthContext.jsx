@@ -24,14 +24,14 @@ export const AuthProvider = ({ children }) => {
   const handleGoogleLogin = async () => {
     try {
       setAuthError("");
-      
+
 
       try {
         const result = await getRedirectResult(auth);
         if (result) {
           const { user } = result;
           const idToken = await user.getIdToken(true);
-          
+
           const res = await client.post("/google-auth", { idToken });
 
           if (res.status === httpStatus.OK) {
@@ -73,7 +73,7 @@ export const AuthProvider = ({ children }) => {
       }
     } catch (err) {
       console.error("Google sign-in error:", err);
-      
+
 
       if (err.code === 'auth/popup-blocked' || err.code === 'auth/popup-closed-by-user') {
         console.log("Popup blocked, trying redirect...");
@@ -85,8 +85,9 @@ export const AuthProvider = ({ children }) => {
           throw redirectErr;
         }
       } else {
-        setAuthError(err.message || "Google Sign-In failed");
-        throw err;
+        const errorMsg = err.response?.data?.message || err.message || "Google Sign-In failed";
+        setAuthError(errorMsg);
+        throw new Error(errorMsg);
       }
     }
   };

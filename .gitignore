@@ -1,4 +1,0 @@
-rewrite_git.sh
-.env
-node_modules
-.DS_Store

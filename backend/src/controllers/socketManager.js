@@ -55,12 +55,15 @@ export const connectToSocket = (server) => {
         rooms.get(currentRoom).add(socket.id);
         timeOnline[socket.id] = new Date();
 
-        const clientsWithInfo = clients.map((client) => {
-          return {
-            socketId: client.id,
-            username: client.handshake.query.username || "User",
-          };
-        });
+        const roomMembers = rooms.get(currentRoom) || new Set();
+        const clientsWithInfo = [];
+        for (const memberId of roomMembers) {
+          const memberSocket = io.sockets.sockets.get(memberId);
+          clientsWithInfo.push({
+            socketId: memberId,
+            username: memberSocket?.handshake?.query?.username || "User",
+          });
+        }
 
         socket.emit("room-joined", currentRoom);
 

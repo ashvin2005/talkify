@@ -53,7 +53,8 @@ const generateRandomCode = () => {
 
 export default function VideoMeetComponent() {
   const navigate = useNavigate();
-  const { userData, addToUserHistory, token } = useAuth();
+  const { userData, addToUserHistory } = useAuth();
+  const token = localStorage.getItem("token");
   const connectionsRef = useRef({});
   const socketRef = useRef();
   const socketIdRef = useRef();
@@ -75,7 +76,7 @@ export default function VideoMeetComponent() {
   const [message, setMessage] = useState("");
   const [newMessages, setNewMessages] = useState(0);
   const [askForUsername, setAskForUsername] = useState(true);
-  const [username, setUsername] = useState(userData?.name || "");
+  const [username, setUsername] = useState(userData?.name ?? "");
   const [videos, setVideos] = useState([]);
   const [meetingCode, setMeetingCode] = useState("");
   const [fullscreen, setFullscreen] = useState(false);
@@ -783,7 +784,7 @@ export default function VideoMeetComponent() {
 
   useEffect(() => {
     if (userData) {
-      setUsername(userData.name);
+      setUsername(userData.name ?? "");
       setAskForUsername(false);
     }
   }, [userData]);
@@ -1242,112 +1243,147 @@ export default function VideoMeetComponent() {
               </div>
             )}
 
-            {(video || videos.length > 0) && (
-              <div
-                className={`
-                  absolute inset-0 p-4 gap-4 overflow-auto grid
-                  ${videos.length + (video ? 1 : 0) === 1 ? "grid-cols-1" : ""}
-                  ${videos.length + (video ? 1 : 0) === 2
-                    ? "sm:grid-cols-2"
-                    : ""
-                  }
-                  ${videos.length + (video ? 1 : 0) > 2
-                    ? "sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
-                    : ""
-                  }
-                  auto-rows-[minmax(150px,1fr)]
-                `}
-              >
-                {video ? (
-                  <div className="relative rounded-xl overflow-hidden border-2 border-purple-500/50 shadow-2xl shadow-purple-500/20 bg-black">
-                    <video
-                      ref={setVideoRef}
-                      autoPlay
-                      muted
-                      className="w-full h-full object-cover"
-                      style={{ transform: "rotateY(180deg)" }}
-                    />
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-3">
-                      <div className="text-base font-semibold text-white truncate flex items-center">
-                        {username} (You){" "}
-                        {!audio && (
-                          <MicOff
-                            className="text-purple-500 ml-2"
-                            style={{ fontSize: "1.2rem" }}
-                          />
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="relative rounded-xl overflow-hidden border border-white/20 shadow-lg bg-black">
-                    <div className="w-full h-full flex items-center justify-center bg-gray-900">
-                      <Avatar className="w-20 h-20 text-3xl">
-                        {username?.charAt(0).toUpperCase() || "Y"}
-                      </Avatar>
-                    </div>
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2">
-                      <div className="text-sm font-medium text-white truncate">
-                        {username} (You){" "}
-                        {!audio && (
-                          <MicOff
-                            className="text-purple-500 ml-1"
-                            style={{ fontSize: "1rem" }}
-                          />
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
+            {(video || videos.length > 0) && (() => {
+              const totalParticipants = videos.length + (video ? 1 : 0);
 
-                {videos.map((videoItem) => {
-                  const participant = participants.find(
-                    (p) => p.id === videoItem.socketId
-                  );
-                  const hasVideo = videoItem.stream
-                    .getVideoTracks()
-                    .some((track) => track.readyState === "live");
+              const getGridStyle = (count) => {
+                if (count === 1) {
+                  return {
+                    gridTemplateColumns: '1fr',
+                    gridTemplateRows: '1fr',
+                  };
+                }
+                if (count === 2) {
+                  return {
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gridTemplateRows: '1fr',
+                  };
+                }
+                if (count <= 4) {
+                  return {
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gridTemplateRows: 'repeat(2, 1fr)',
+                  };
+                }
+                if (count <= 6) {
+                  return {
+                    gridTemplateColumns: 'repeat(3, 1fr)',
+                    gridTemplateRows: 'repeat(2, 1fr)',
+                  };
+                }
+                if (count <= 9) {
+                  return {
+                    gridTemplateColumns: 'repeat(3, 1fr)',
+                    gridTemplateRows: 'repeat(3, 1fr)',
+                  };
+                }
+                const cols = Math.ceil(Math.sqrt(count));
+                const rows = Math.ceil(count / cols);
+                return {
+                  gridTemplateColumns: `repeat(${cols}, 1fr)`,
+                  gridTemplateRows: `repeat(${rows}, 1fr)`,
+                };
+              };
 
-                  return (
-                    <div
-                      key={videoItem.socketId}
-                      className="relative rounded-xl overflow-hidden border border-white/20 shadow-lg bg-black"
-                    >
-                      {hasVideo ? (
-                        <video
-                          ref={(ref) => {
-                            if (ref && videoItem.stream) {
-                              ref.srcObject = videoItem.stream;
-                            }
-                          }}
-                          autoPlay
-                          playsInline
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gray-900">
-                          <Avatar className="w-20 h-20 text-3xl">
-                            {participant?.name?.charAt(0).toUpperCase() || "U"}
-                          </Avatar>
+              return (
+                <div
+                  className="absolute inset-0 p-3 gap-3 overflow-hidden"
+                  style={{
+                    display: 'grid',
+                    ...getGridStyle(totalParticipants),
+                  }}
+                >
+                  {video ? (
+                    <div className="relative rounded-xl overflow-hidden border-2 border-purple-500/50 shadow-2xl shadow-purple-500/20 bg-black">
+                      <video
+                        ref={setVideoRef}
+                        autoPlay
+                        muted
+                        className="w-full h-full object-cover"
+                        style={{ transform: "rotateY(180deg)" }}
+                      />
+                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-3">
+                        <div className="text-base font-semibold text-white truncate flex items-center">
+                          {username} (You){" "}
+                          {!audio && (
+                            <MicOff
+                              className="text-purple-500 ml-2"
+                              style={{ fontSize: "1.2rem" }}
+                            />
+                          )}
                         </div>
-                      )}
-                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3">
-                        <div className="flex items-center">
-                          <Avatar className="w-8 h-8 mr-2">
-                            {participant?.name?.charAt(0).toUpperCase() || "U"}
-                          </Avatar>
-                          <div>
-                            <div className="text-sm font-medium">
-                              {participant?.name || "User"}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="relative rounded-xl overflow-hidden border border-white/20 shadow-lg bg-black">
+                      <div className="w-full h-full flex items-center justify-center bg-gray-900">
+                        <Avatar className="w-20 h-20 text-3xl">
+                          {username?.charAt(0).toUpperCase() || "Y"}
+                        </Avatar>
+                      </div>
+                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2">
+                        <div className="text-sm font-medium text-white truncate">
+                          {username} (You){" "}
+                          {!audio && (
+                            <MicOff
+                              className="text-purple-500 ml-1"
+                              style={{ fontSize: "1rem" }}
+                            />
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {videos.map((videoItem) => {
+                    const participant = participants.find(
+                      (p) => p.id === videoItem.socketId
+                    );
+                    const hasVideo = videoItem.stream
+                      .getVideoTracks()
+                      .some((track) => track.readyState === "live");
+
+                    return (
+                      <div
+                        key={videoItem.socketId}
+                        className="relative rounded-xl overflow-hidden border border-white/20 shadow-lg bg-black"
+                      >
+                        {hasVideo ? (
+                          <video
+                            ref={(ref) => {
+                              if (ref && videoItem.stream) {
+                                ref.srcObject = videoItem.stream;
+                              }
+                            }}
+                            autoPlay
+                            playsInline
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-gray-900">
+                            <Avatar className="w-20 h-20 text-3xl">
+                              {participant?.name?.charAt(0).toUpperCase() || "U"}
+                            </Avatar>
+                          </div>
+                        )}
+                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3">
+                          <div className="flex items-center">
+                            <Avatar className="w-8 h-8 mr-2">
+                              {participant?.name?.charAt(0).toUpperCase() || "U"}
+                            </Avatar>
+                            <div>
+                              <div className="text-sm font-medium">
+                                {participant?.name || "User"}
+                              </div>
                             </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+                    );
+                  })}
+                </div>
+              );
+            })()}
           </div>
 
 

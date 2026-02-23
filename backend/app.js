@@ -1,6 +1,10 @@
 import express from "express";
 import { createServer } from "node:http";
 import cors from "cors";
+import dotenv from "dotenv";
+
+
+dotenv.config();
 
 import { connectToSocket } from "./src/controllers/socketManager.js";
 import userRoute from "./src/routes/userRoute.js";
@@ -15,9 +19,8 @@ connectToSocket(server);
 app.set("port", process.env.PORT || 8000);
 
 app.use(cors({
-  origin: "*",
+  origin: process.env.FRONTEND_URL || "https://talkify-beryl.vercel.app",
   methods: ["GET", "POST"],
-  allowedHeaders: ["*"],
   credentials: true,
 }));
 app.use(express.json({ limit: "40kb" }));
