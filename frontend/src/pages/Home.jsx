@@ -352,7 +352,7 @@ function HomeComponent() {
 
 
               <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-4">
-                <div className="bg-gray-900 border border-purple-500/30 rounded-full p-3 shadow-lg hover:bg-gray-800 transition-colors cursor-pointer group">
+                <div className="bg-gray-900 border border-purple-500/30 rounded-full p-3 shadow-lg hover:bg-gray-800 transition-colors cursor-pointer group relative">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     className="h-6 w-6 text-purple-500 group-hover:text-purple-400 transition-colors"
@@ -367,8 +367,14 @@ function HomeComponent() {
                       d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
                     />
                   </svg>
+                  <div className="absolute -top-4 -right-2 opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:-translate-y-2">
+                    <span className="text-lg">🎵</span>
+                  </div>
+                  <div className="absolute -top-4 -left-2 opacity-0 group-hover:opacity-100 transition-all duration-300 delay-75 group-hover:-translate-y-2">
+                    <span className="text-lg">🎶</span>
+                  </div>
                 </div>
-                <div className="bg-gradient-to-r from-purple-600 to-blue-600 rounded-full p-4 shadow-lg transform hover:scale-110 hover:shadow-purple-500/50 transition-all cursor-pointer">
+                <div className="bg-gradient-to-r from-purple-600 to-blue-600 rounded-full p-4 shadow-lg transform hover:scale-110 hover:shadow-purple-500/50 transition-all cursor-pointer group relative">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     className="h-6 w-6 text-white"
@@ -383,6 +389,9 @@ function HomeComponent() {
                       d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
                     />
                   </svg>
+                  <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <span className="text-red-500 text-2xl animate-pulse leading-none">●</span>
+                  </div>
                 </div>
                 <div className="bg-gray-900 border border-purple-500/30 rounded-full p-3 shadow-lg hover:bg-gray-800 transition-colors cursor-pointer group relative">
                   <svg
@@ -399,14 +408,14 @@ function HomeComponent() {
                       d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
-                  <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <span className="text-xl">🎉</span>
+                  <div className="absolute -top-6 -right-2 opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:-translate-y-2">
+                    <span className="text-xl">❤️</span>
                   </div>
-                  <div className="absolute -top-4 left-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-75">
-                    <span className="text-lg">✨</span>
+                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-300 delay-75 group-hover:-translate-y-2">
+                    <span className="text-xl">👍</span>
                   </div>
-                  <div className="absolute top-0 -left-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-150">
-                    <span className="text-xl">🎊</span>
+                  <div className="absolute -top-6 -left-2 opacity-0 group-hover:opacity-100 transition-all duration-300 delay-150 group-hover:-translate-y-2">
+                    <span className="text-xl">👏</span>
                   </div>
                 </div>
               </div>
