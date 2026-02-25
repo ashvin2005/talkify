@@ -231,13 +231,13 @@ export const addToHistory = async (req, res) => {
   }
 
   try {
-
     const usersQuery = await db
       .collection("users")
       .where("token", "==", token)
       .get();
 
     if (usersQuery.empty) {
+      console.error("addToHistory: No user found for token");
       return res
         .status(httpStatus.NOT_FOUND)
         .json({ message: "User not found" });
@@ -245,19 +245,20 @@ export const addToHistory = async (req, res) => {
 
     const user = usersQuery.docs[0].data();
 
-
-    await db.collection("meetings").add({
+    const docRef = await db.collection("meetings").add({
       user_id: user.username,
       meetingCode: meeting_code,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
+    console.log(`Meeting ${meeting_code} added to history for user ${user.username}, doc: ${docRef.id}`);
+
     return res
       .status(httpStatus.CREATED)
       .json({ message: "Added code to history" });
   } catch (e) {
-    console.error(e);
-    return res.status(500).json({ message: `Something went wrong: ${e}` });
+    console.error("addToHistory error:", e);
+    return res.status(500).json({ message: `Something went wrong: ${e.message}` });
   }
 };
 
@@ -284,20 +285,27 @@ export const getUserHistory = async (req, res) => {
 
     const user = usersQuery.docs[0].data();
 
+    // Query without orderBy to avoid needing a composite index
     const meetingsSnapshot = await db
       .collection("meetings")
       .where("user_id", "==", user.username)
-      .orderBy("createdAt", "desc")
       .get();
 
-    const meetings = meetingsSnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+    const meetings = meetingsSnapshot.docs.map((doc) => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        meetingCode: data.meetingCode,
+        date: data.createdAt ? data.createdAt.toDate().toISOString() : new Date().toISOString(),
+      };
+    });
+
+    // Sort by date descending in JS instead
+    meetings.sort((a, b) => new Date(b.date) - new Date(a.date));
 
     return res.status(httpStatus.OK).json(meetings);
   } catch (e) {
-    console.error(e);
-    return res.status(500).json({ message: `Something went wrong: ${e}` });
+    console.error("getUserHistory error:", e);
+    return res.status(500).json({ message: `Something went wrong: ${e.message}` });
   }
 };
