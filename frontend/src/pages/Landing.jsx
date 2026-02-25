@@ -27,7 +27,7 @@ export default function LandingPage() {
       setGuestError("");
       setGuestLoading(true);
       await handleGuestLogin();
-      // handleGuestLogin already navigates to /home on success
+
     } catch (err) {
       setGuestError("Could not start guest session. Please try again.");
     } finally {

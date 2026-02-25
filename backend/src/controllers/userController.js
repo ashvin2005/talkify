@@ -285,7 +285,7 @@ export const getUserHistory = async (req, res) => {
 
     const user = usersQuery.docs[0].data();
 
-    // Query without orderBy to avoid needing a composite index
+
     const meetingsSnapshot = await db
       .collection("meetings")
       .where("user_id", "==", user.username)
@@ -300,7 +300,7 @@ export const getUserHistory = async (req, res) => {
       };
     });
 
-    // Sort by date descending in JS instead
+
     meetings.sort((a, b) => new Date(b.date) - new Date(a.date));
 
     return res.status(httpStatus.OK).json(meetings);

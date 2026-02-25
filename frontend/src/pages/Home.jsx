@@ -37,7 +37,7 @@ function HomeComponent() {
     setMeetingCode(meetingLink);
     setIsGenerating(false);
 
-    // Save to history BEFORE navigating away
+
     try {
       await addToUserHistory(meetingLink);
     } catch (error) {
@@ -50,7 +50,7 @@ function HomeComponent() {
   const handleJoinVideoCall = async () => {
     if (!meetingCode.trim()) return;
 
-    // Save to history BEFORE navigating away
+
     try {
       await addToUserHistory(meetingCode.trim());
     } catch (error) {

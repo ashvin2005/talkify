@@ -130,7 +130,7 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, []);
 
-  // Clear guest session history when browser/tab is closed
+
   useEffect(() => {
     const handleBeforeUnload = () => {
       if (isGuestUser()) {
@@ -143,7 +143,7 @@ export const AuthProvider = ({ children }) => {
   }, [userData]);
 
   const logout = () => {
-    // Clear guest session history on logout
+
     if (isGuestUser()) {
       sessionStorage.removeItem("guestMeetingHistory");
     }
@@ -209,7 +209,7 @@ export const AuthProvider = ({ children }) => {
       if (!meetingCode) throw new Error("Missing meeting code");
 
       if (isGuestUser()) {
-        // Store in sessionStorage for guest users
+
         const existing = JSON.parse(sessionStorage.getItem("guestMeetingHistory") || "[]");
         existing.unshift({
           meetingCode,
@@ -219,7 +219,7 @@ export const AuthProvider = ({ children }) => {
         return { message: "Added to guest session history" };
       }
 
-      // For authenticated users, store in backend
+
       const token = localStorage.getItem("token");
       if (!token) throw new Error("Missing token");
 
@@ -236,11 +236,11 @@ export const AuthProvider = ({ children }) => {
   const getHistoryOfUser = async () => {
     try {
       if (isGuestUser()) {
-        // Return from sessionStorage for guest users
+
         return JSON.parse(sessionStorage.getItem("guestMeetingHistory") || "[]");
       }
 
-      // For authenticated users, fetch from backend
+
       const token = localStorage.getItem("token");
       if (!token) throw new Error("Missing token");
 
