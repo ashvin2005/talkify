@@ -352,10 +352,10 @@ function HomeComponent() {
 
 
               <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-4">
-                <div className="bg-gray-900 border border-purple-500/30 rounded-full p-3 shadow-lg">
+                <div className="bg-gray-900 border border-purple-500/30 rounded-full p-3 shadow-lg hover:bg-gray-800 transition-colors cursor-pointer group">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className="h-6 w-6 text-purple-500"
+                    className="h-6 w-6 text-purple-500 group-hover:text-purple-400 transition-colors"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -368,7 +368,7 @@ function HomeComponent() {
                     />
                   </svg>
                 </div>
-                <div className="bg-gradient-to-r from-purple-600 to-blue-600 rounded-full p-4 shadow-lg transform hover:scale-110 transition">
+                <div className="bg-gradient-to-r from-purple-600 to-blue-600 rounded-full p-4 shadow-lg transform hover:scale-110 hover:shadow-purple-500/50 transition-all cursor-pointer">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     className="h-6 w-6 text-white"
@@ -384,10 +384,10 @@ function HomeComponent() {
                     />
                   </svg>
                 </div>
-                <div className="bg-gray-900 border border-purple-500/30 rounded-full p-3 shadow-lg">
+                <div className="bg-gray-900 border border-purple-500/30 rounded-full p-3 shadow-lg hover:bg-gray-800 transition-colors cursor-pointer group relative">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className="h-6 w-6 text-purple-500"
+                    className="h-6 w-6 text-purple-500 group-hover:text-purple-400 transition-colors"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -396,9 +396,18 @@ function HomeComponent() {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                      d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
+                  <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <span className="text-xl">🎉</span>
+                  </div>
+                  <div className="absolute -top-4 left-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-75">
+                    <span className="text-lg">✨</span>
+                  </div>
+                  <div className="absolute top-0 -left-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-150">
+                    <span className="text-xl">🎊</span>
+                  </div>
                 </div>
               </div>
 
