@@ -261,13 +261,6 @@ export default function VideoMeetComponent() {
     setAskForUsername(false);
 
 
-    if (addToUserHistory && meetingCode) {
-      addToUserHistory(meetingCode).catch(error => {
-        console.error("Background - Error adding to history:", error);
-      });
-    }
-
-
     connectToSocketServer();
     if (!window.localStream || !window.localStream.active) {
       getUserMedia();
@@ -766,15 +759,6 @@ export default function VideoMeetComponent() {
 
       if (socketRef.current) {
         socketRef.current.disconnect();
-      }
-
-      if (userData && meetingCode) {
-        try {
-          await addToUserHistory(meetingCode);
-        } catch (err) {
-          console.error("Failed to add meeting to history:", err);
-          showSnackbar("Failed to save meeting history", "error");
-        }
       }
 
       navigate("/home");
