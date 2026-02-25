@@ -409,13 +409,13 @@ function HomeComponent() {
                     />
                   </svg>
                   <div className="absolute -top-6 -right-2 opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:-translate-y-2">
-                    <span className="text-xl">😉</span>
+                    <span className="text-xl">🎉</span>
                   </div>
                   <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-300 delay-75 group-hover:-translate-y-2">
-                    <span className="text-xl">❓</span>
+                    <span className="text-xl">✨</span>
                   </div>
                   <div className="absolute -top-6 -left-2 opacity-0 group-hover:opacity-100 transition-all duration-300 delay-150 group-hover:-translate-y-2">
-                    <span className="text-xl">❗</span>
+                    <span className="text-xl">🎊</span>
                   </div>
                 </div>
               </div>
