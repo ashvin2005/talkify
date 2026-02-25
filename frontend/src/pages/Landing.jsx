@@ -5,6 +5,7 @@ import Particles from "react-tsparticles";
 import { loadSlim } from "tsparticles-slim";
 import "../index.css";
 import useTyped from "../components/TypeWriter";
+import { Lock, Desktop, DeviceMobile, Users } from "@phosphor-icons/react";
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -240,18 +241,18 @@ export default function LandingPage() {
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-12">
             {[
-              { icon: "🔒", name: "Secure", desc: "End-to-End Encrypted" },
-              { icon: "🖥️", name: "HD", desc: "Crystal Clear Quality" },
-              { icon: "📱", name: "Multi-Device", desc: "Works Everywhere" },
-              { icon: "👥", name: "Group", desc: "Up to 50 People" },
+              { icon: <Lock weight="duotone" className="w-8 h-8 text-purple-400" />, name: "Secure", desc: "End-to-End Encrypted" },
+              { icon: <Desktop weight="duotone" className="w-8 h-8 text-blue-400" />, name: "HD", desc: "Crystal Clear Quality" },
+              { icon: <DeviceMobile weight="duotone" className="w-8 h-8 text-green-400" />, name: "Multi-Device", desc: "Works Everywhere" },
+              { icon: <Users weight="duotone" className="w-8 h-8 text-pink-400" />, name: "Group", desc: "Up to 50 People" },
             ].map((feature, index) => (
               <div
                 key={index}
                 className="bg-black/30 p-4 rounded-xl border border-purple-900/30 hover:border-purple-500/50 transition-all group"
               >
-                <div className="text-2xl mb-2">{feature.icon}</div>
-                <div className="font-bold text-white">{feature.name}</div>
-                <div className="text-sm text-gray-400">{feature.desc}</div>
+                <div className="mb-3 flex justify-center md:justify-start">{feature.icon}</div>
+                <div className="font-bold text-white content-center md:justify-start flex justify-center">{feature.name}</div>
+                <div className="text-sm text-gray-400 content-center md:justify-start flex justify-center">{feature.desc}</div>
               </div>
             ))}
           </div>

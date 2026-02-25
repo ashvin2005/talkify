@@ -147,6 +147,39 @@ export const googleAuth = async (req, res) => {
 };
 
 
+export const guestLogin = async (req, res) => {
+  const guestUsername = "talkify_guest";
+  const guestPassword = "GuestUser123!";
+  const guestName = "Guest User";
+
+  try {
+    const userRef = db.collection("users").doc(guestUsername);
+    const userSnap = await userRef.get();
+
+    if (!userSnap.exists) {
+      const hashedPassword = await bcrypt.hash(guestPassword, 10);
+      await userRef.set({
+        name: guestName,
+        username: guestUsername,
+        password: hashedPassword,
+        token: "",
+      });
+    }
+
+    const token = crypto.randomBytes(20).toString("hex");
+    await userRef.update({ token });
+
+    return res.status(httpStatus.OK).json({
+      token,
+      user: { username: guestUsername, name: guestName },
+    });
+  } catch (e) {
+    console.error("Guest login error:", e);
+    return res.status(500).json({ message: `Guest login failed: ${e}` });
+  }
+};
+
+
 export const verifyToken = async (req, res) => {
   const token = req.headers.authorization?.split(' ')[1] || req.query.token;
   

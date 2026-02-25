@@ -147,7 +147,7 @@ export const AuthProvider = ({ children }) => {
         return res.data.message;
       }
     } catch (err) {
-      throw err.response?.data?.message || "Registration failed";
+      throw new Error(err.response?.data?.message || "Registration failed");
     }
   };
 
@@ -163,7 +163,22 @@ export const AuthProvider = ({ children }) => {
         return true;
       }
     } catch (err) {
-      throw err.response?.data?.message || "Login failed";
+      throw new Error(err.response?.data?.message || "Login failed");
+    }
+  };
+
+
+  const handleGuestLogin = async () => {
+    try {
+      const res = await client.post("/guest-login");
+      if (res.status === httpStatus.OK) {
+        localStorage.setItem("token", res.data.token);
+        setUserData(res.data.user || null);
+        navigate("/home", { replace: true });
+        return true;
+      }
+    } catch (err) {
+      throw new Error(err.response?.data?.message || "Guest login failed");
     }
   };
 
@@ -205,6 +220,7 @@ export const AuthProvider = ({ children }) => {
     handleRegister,
     handleLogin,
     handleGoogleLogin,
+    handleGuestLogin,
     logout,
     addToUserHistory,
     getHistoryOfUser,

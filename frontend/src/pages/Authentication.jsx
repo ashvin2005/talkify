@@ -4,7 +4,7 @@ import Particles from "react-tsparticles";
 import { loadSlim } from "tsparticles-slim";
 
 export default function Authentication() {
-  const { handleRegister, handleLogin, handleGoogleLogin, authError } =
+  const { handleRegister, handleLogin, handleGoogleLogin, handleGuestLogin, authError } =
     useContext(AuthContext);
 
   const [formState, setFormState] = useState(0);
@@ -59,32 +59,9 @@ export default function Authentication() {
       setLocalError("");
       setMessage("");
       setLoading(true);
-
-      const baseUsername = "talkify_guest";
-      const basePassword = "GuestUser123!";
-      const baseName = "Guest User";
-
-      try {
-        await handleRegister(baseName, baseUsername, basePassword);
-        return;
-      } catch (regError) {
-        if (regError && (regError.toString().includes("exist") || regError.toString().includes("taken"))) {
-          try {
-            await handleLogin(baseUsername, basePassword);
-            return;
-          } catch (loginError) {
-            console.warn("Guest login failed (password mismatch?), creating new user");
-          }
-        }
-      }
-
-      const randomStart = Math.floor(Math.random() * 10000);
-      const randomUser = `guest_${randomStart}`;
-      const randomPass = `Guest${randomStart}!`;
-      await handleRegister(baseName, randomUser, randomPass);
-
+      await handleGuestLogin();
     } catch (err) {
-      setLocalError("Could not start demo session. Please try again.");
+      setLocalError(err.message || "Could not start guest session. Please try again.");
     } finally {
       setLoading(false);
     }

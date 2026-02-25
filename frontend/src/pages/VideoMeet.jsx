@@ -37,7 +37,19 @@ import server from "../environment";
 import { useAuth } from "../contexts/AuthContext";
 import Particles from "react-tsparticles";
 import { loadSlim } from "tsparticles-slim";
-
+import {
+  ThumbsUp,
+  Heart,
+  SmileyWink,
+  HandsClapping,
+  Confetti,
+  Fire,
+  WarningCircle,
+  Question,
+  Hand,
+  Smiley
+} from "@phosphor-icons/react";
+import "../index.css";
 const server_url = server;
 const peerConfigConnections = {
   iceServers: [
@@ -1418,7 +1430,7 @@ export default function VideoMeetComponent() {
                   onClick={triggerConfetti}
                   className="w-14 h-14 rounded-full bg-gray-800 hover:bg-purple-600 text-white flex items-center justify-center transition-all duration-300 transform hover:scale-110 text-2xl"
                 >
-                  🎉
+                  <Confetti weight="fill" className="text-purple-400" />
                 </button>
               </Tooltip>
 
@@ -1534,7 +1546,7 @@ export default function VideoMeetComponent() {
                     : "glass-effect border border-purple-500/30 hover:bg-purple-500/20"
                     }`}
                 >
-                  ✋
+                  <Hand weight={handRaised ? "fill" : "duotone"} className={handRaised ? "text-white" : "text-yellow-400"} />
                 </button>
               </Tooltip>
 
@@ -1544,7 +1556,7 @@ export default function VideoMeetComponent() {
                   onClick={() => setShowReactionMenu(!showReactionMenu)}
                   className="w-14 h-14 glass-effect rounded-full shadow-2xl flex items-center justify-center text-2xl border border-purple-500/30 hover:bg-purple-500/20 transition-all duration-300 transform hover:scale-110"
                 >
-                  😊
+                  <Smiley weight="duotone" className="text-yellow-400" />
                 </button>
               </Tooltip>
 
@@ -1555,16 +1567,25 @@ export default function VideoMeetComponent() {
             {showReactionMenu && (
               <div className="fixed bottom-28 right-28 z-50 glass-effect rounded-2xl p-4 shadow-2xl border border-purple-500/30 animate-fade-in-scale">
                 <div className="grid grid-cols-4 gap-3">
-                  {['👍', '❤️', '😂', '👏', '🎉', '🔥', '😮', '🤔'].map((emoji, index) => (
+                  {[
+                    { component: <ThumbsUp weight="fill" className="text-yellow-400" />, id: '👍' },
+                    { component: <Heart weight="fill" className="text-red-500" />, id: '❤️' },
+                    { component: <SmileyWink weight="fill" className="text-yellow-400" />, id: '😂' },
+                    { component: <HandsClapping weight="fill" className="text-yellow-400" />, id: '👏' },
+                    { component: <Confetti weight="fill" className="text-purple-400" />, id: '🎉' },
+                    { component: <Fire weight="fill" className="text-orange-500" />, id: '🔥' },
+                    { component: <WarningCircle weight="fill" className="text-yellow-500" />, id: '😮' },
+                    { component: <Question weight="fill" className="text-blue-400" />, id: '🤔' }
+                  ].map((emojiObj, index) => (
                     <button
                       key={index}
                       onClick={() => {
-                        sendReaction(emoji);
+                        sendReaction(emojiObj.id);
                         setShowReactionMenu(false);
                       }}
                       className="w-12 h-12 flex items-center justify-center text-3xl hover:scale-125 transition-transform duration-200 rounded-xl hover:bg-purple-500/20"
                     >
-                      {emoji}
+                      {emojiObj.component}
                     </button>
                   ))}
                 </div>
