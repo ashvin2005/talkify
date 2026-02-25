@@ -11,15 +11,6 @@ function HomeComponent() {
   const [meetingCode, setMeetingCode] = useState("");
   const { addToUserHistory, logout } = useContext(AuthContext);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [activeUsers, setActiveUsers] = useState(0);
-
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setActiveUsers(Math.floor(Math.random() * 5000) + 1000);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, []);
 
   const particlesInit = async (engine) => {
     await loadSlim(engine);
@@ -287,17 +278,13 @@ function HomeComponent() {
 
 
           <div className="mt-12 p-6 bg-gradient-to-br from-purple-900/30 to-blue-900/30 rounded-xl border-2 border-purple-500/30 backdrop-blur-sm shadow-lg">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="relative">
-                  <div className="w-3 h-3 bg-purple-500 rounded-full animate-pulse"></div>
-                  <div className="absolute inset-0 bg-purple-500 rounded-full opacity-75 animate-ping"></div>
-                </div>
-                <span className="text-gray-200 font-semibold">Active meetings</span>
+            <div className="flex items-center space-x-3">
+              <div className="relative">
+                <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                <div className="absolute inset-0 bg-green-500 rounded-full opacity-75 animate-ping"></div>
               </div>
-              <span className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400">
-                {activeUsers.toLocaleString()}
-              </span>
+              <span className="text-gray-200 font-semibold">All systems operational</span>
+              <span className="ml-auto text-green-400 font-semibold text-sm">● Online</span>
             </div>
           </div>
         </div>
