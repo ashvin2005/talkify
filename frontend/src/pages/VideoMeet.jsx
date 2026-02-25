@@ -65,7 +65,7 @@ const generateRandomCode = () => {
 
 export default function VideoMeetComponent() {
   const navigate = useNavigate();
-  const { userData, addToUserHistory } = useAuth();
+  const { userData } = useAuth();
   const token = localStorage.getItem("token");
   const connectionsRef = useRef({});
   const socketRef = useRef();

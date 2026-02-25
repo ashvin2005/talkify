@@ -11,13 +11,16 @@ function HomeComponent() {
   const [meetingCode, setMeetingCode] = useState("");
   const { addToUserHistory, logout } = useContext(AuthContext);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isSavingHistory, setIsSavingHistory] = useState(false);
 
   const particlesInit = async (engine) => {
     await loadSlim(engine);
   };
 
   const generateMeetingCode = async () => {
+    if (isGenerating || isSavingHistory) return;
     setIsGenerating(true);
+    setIsSavingHistory(true);
 
     const chars = "abcdefghijklmnopqrstuvwxyz23456789"; 
 
@@ -34,9 +37,6 @@ function HomeComponent() {
     const part3 = generateGroup(3);
 
     const meetingLink = `${part1}-${part2}-${part3}`;
-    setMeetingCode(meetingLink);
-    setIsGenerating(false);
-
 
     try {
       await addToUserHistory(meetingLink);
@@ -44,12 +44,14 @@ function HomeComponent() {
       console.error("Error adding meeting to history:", error);
     }
 
+    setIsGenerating(false);
+    setIsSavingHistory(false);
     navigate(`/${meetingLink}`);
   };
 
   const handleJoinVideoCall = async () => {
-    if (!meetingCode.trim()) return;
-
+    if (!meetingCode.trim() || isSavingHistory) return;
+    setIsSavingHistory(true);
 
     try {
       await addToUserHistory(meetingCode.trim());
@@ -57,6 +59,7 @@ function HomeComponent() {
       console.error("Error joining meeting:", error);
     }
 
+    setIsSavingHistory(false);
     navigate(`/${meetingCode.trim()}`);
   };
 
