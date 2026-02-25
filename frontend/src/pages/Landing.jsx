@@ -9,8 +9,10 @@ import { Lock, Desktop, DeviceMobile, Users } from "@phosphor-icons/react";
 
 export default function LandingPage() {
   const navigate = useNavigate();
-  const { userData } = useAuth();
+  const { userData, handleGuestLogin } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [guestLoading, setGuestLoading] = useState(false);
+  const [guestError, setGuestError] = useState("");
 
   const particlesInit = async (engine) => {
     await loadSlim(engine);
@@ -18,6 +20,19 @@ export default function LandingPage() {
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
+  };
+
+  const handleJoinAsGuest = async () => {
+    try {
+      setGuestError("");
+      setGuestLoading(true);
+      await handleGuestLogin();
+      // handleGuestLogin already navigates to /home on success
+    } catch (err) {
+      setGuestError("Could not start guest session. Please try again.");
+    } finally {
+      setGuestLoading(false);
+    }
   };
 
   return (
@@ -231,12 +246,26 @@ export default function LandingPage() {
               <span className="mr-2"></span> Get Started
             </Link>
             <button
-              onClick={() => navigate("/aljk23")}
-              className=" border-2 border-purple-500/50 text-white px-8 py-4 rounded-full shadow-lg hover:bg-purple-500/10 transition-all duration-300 transform hover:scale-105 font-medium flex items-center"
+              onClick={handleJoinAsGuest}
+              disabled={guestLoading}
+              className="border-2 border-purple-500/50 text-white px-8 py-4 rounded-full shadow-lg hover:bg-purple-500/10 transition-all duration-300 transform hover:scale-105 font-medium flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <span className="mr-2"></span> Join as Guest
+              {guestLoading ? (
+                <>
+                  <svg className="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                  </svg>
+                  Joining...
+                </>
+              ) : (
+                <><span className="mr-2"></span> Join as Guest</>
+              )}
             </button>
           </div>
+          {guestError && (
+            <p className="text-red-400 text-sm mt-2">{guestError}</p>
+          )}
 
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-12">
