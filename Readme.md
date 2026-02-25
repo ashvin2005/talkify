@@ -57,4 +57,3 @@ Talkify enables users to sign up via Google or email, create or join meeting roo
 6. **Responsive & Modern UI**  
    - Built with React and Tailwind CSS for a smooth experience on all devices.
 
-# talkify
