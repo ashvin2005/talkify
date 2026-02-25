@@ -6,9 +6,11 @@ import Particles from "react-tsparticles";
 import { loadSlim } from "tsparticles-slim";
 
 export default function History() {
-  const { getHistoryOfUser, logout } = useContext(AuthContext);
+  const { getHistoryOfUser, logout, userData } = useContext(AuthContext);
   const [meetings, setMeetings] = useState([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const isGuest = userData?.username === "talkify_guest" || localStorage.getItem("isGuest") === "true";
 
   const particlesInit = async (engine) => {
     await loadSlim(engine);
@@ -17,18 +19,33 @@ export default function History() {
   useEffect(() => {
     const fetchHistory = async () => {
       try {
+        setLoading(true);
         const history = await getHistoryOfUser();
-        setMeetings(history);
-      } catch {
-
+        setMeetings(history || []);
+      } catch (err) {
+        console.error("Failed to fetch history:", err);
+        setMeetings([]);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchHistory();
   }, []);
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
+  const formatDate = (dateInput) => {
+    let date;
+    // Handle Firestore Timestamp objects
+    if (dateInput && dateInput._seconds) {
+      date = new Date(dateInput._seconds * 1000);
+    } else if (dateInput && dateInput.seconds) {
+      date = new Date(dateInput.seconds * 1000);
+    } else {
+      date = new Date(dateInput);
+    }
+    
+    if (isNaN(date.getTime())) return "Unknown date";
+    
     const day = date.getDate().toString().padStart(2, "0");
     const month = (date.getMonth() + 1).toString().padStart(2, "0");
     const year = date.getFullYear();
@@ -135,7 +152,21 @@ export default function History() {
 
 
       <div className="container mx-auto px-6 py-8 z-10 relative">
-        {meetings.length > 0 ? (
+        {isGuest && (
+          <div className="mb-6 p-4 bg-yellow-900/30 border border-yellow-500/40 rounded-xl flex items-center space-x-3">
+            <span className="text-yellow-400 text-xl">⚠️</span>
+            <p className="text-yellow-200 text-sm">
+              You're in a <span className="font-bold">guest session</span>. Meeting history is stored temporarily and will be cleared when you logout or close the browser.
+            </p>
+          </div>
+        )}
+
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-20">
+            <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p className="text-gray-400">Loading history...</p>
+          </div>
+        ) : meetings.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {meetings.map((meeting, index) => (
               <div
@@ -157,7 +188,7 @@ export default function History() {
                   </span>
                 </div>
                 <p className="text-gray-400 text-sm">
-                  {formatDate(meeting.date)}
+                  {formatDate(meeting.date || meeting.createdAt)}
                 </p>
                 <div className="mt-4 pt-4 border-t border-gray-800 flex justify-end">
                   <button className="text-purple-400 hover:text-purple-300 text-sm font-medium flex items-center">

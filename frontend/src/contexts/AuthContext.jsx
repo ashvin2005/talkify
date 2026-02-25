@@ -21,6 +21,10 @@ export const AuthProvider = ({ children }) => {
   });
   const [authError, setAuthError] = useState("");
 
+  const isGuestUser = () => {
+    return userData?.username === "talkify_guest" || localStorage.getItem("isGuest") === "true";
+  };
+
   const handleGoogleLogin = async () => {
     try {
       setAuthError("");
@@ -126,9 +130,26 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, []);
 
+  // Clear guest session history when browser/tab is closed
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (isGuestUser()) {
+        sessionStorage.removeItem("guestMeetingHistory");
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [userData]);
+
   const logout = () => {
+    // Clear guest session history on logout
+    if (isGuestUser()) {
+      sessionStorage.removeItem("guestMeetingHistory");
+    }
     localStorage.removeItem("token");
     localStorage.removeItem("authData");
+    localStorage.removeItem("isGuest");
     setUserData(null);
     navigate("/");
   };
@@ -173,6 +194,7 @@ export const AuthProvider = ({ children }) => {
       const res = await client.post("/guest-login");
       if (res.status === httpStatus.OK) {
         localStorage.setItem("token", res.data.token);
+        localStorage.setItem("isGuest", "true");
         setUserData(res.data.user || null);
         navigate("/home", { replace: true });
         return true;
@@ -182,12 +204,24 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-
   const addToUserHistory = async (meetingCode) => {
     try {
+      if (!meetingCode) throw new Error("Missing meeting code");
+
+      if (isGuestUser()) {
+        // Store in sessionStorage for guest users
+        const existing = JSON.parse(sessionStorage.getItem("guestMeetingHistory") || "[]");
+        existing.unshift({
+          meetingCode,
+          date: new Date().toISOString(),
+        });
+        sessionStorage.setItem("guestMeetingHistory", JSON.stringify(existing));
+        return { message: "Added to guest session history" };
+      }
+
+      // For authenticated users, store in backend
       const token = localStorage.getItem("token");
-      if (!token || !meetingCode)
-        throw new Error("Missing token or meeting code");
+      if (!token) throw new Error("Missing token");
 
       const res = await client.post("/add_to_activity", {
         token,
@@ -195,13 +229,18 @@ export const AuthProvider = ({ children }) => {
       });
       return res.data;
     } catch (err) {
-      throw err.response?.data?.message || "Failed to add meeting to history";
+      throw err.response?.data?.message || err.message || "Failed to add meeting to history";
     }
   };
 
-
   const getHistoryOfUser = async () => {
     try {
+      if (isGuestUser()) {
+        // Return from sessionStorage for guest users
+        return JSON.parse(sessionStorage.getItem("guestMeetingHistory") || "[]");
+      }
+
+      // For authenticated users, fetch from backend
       const token = localStorage.getItem("token");
       if (!token) throw new Error("Missing token");
 
@@ -210,7 +249,7 @@ export const AuthProvider = ({ children }) => {
       });
       return res.data;
     } catch (err) {
-      throw err.response?.data?.message || "Failed to fetch history";
+      throw err.response?.data?.message || err.message || "Failed to fetch history";
     }
   };
 

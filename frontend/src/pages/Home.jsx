@@ -33,33 +33,31 @@ function HomeComponent() {
     const part2 = generateGroup(4);
     const part3 = generateGroup(3);
 
-
     const meetingLink = `${part1}-${part2}-${part3}`;
-
     setMeetingCode(meetingLink);
     setIsGenerating(false);
-    
+
+    // Save to history BEFORE navigating away
+    try {
+      await addToUserHistory(meetingLink);
+    } catch (error) {
+      console.error("Error adding meeting to history:", error);
+    }
 
     navigate(`/${meetingLink}`);
-    
-
-    addToUserHistory(meetingLink).catch(error => {
-       console.error("Background - Error adding meeting to history:", error);
-
-    });
   };
-  
 
-  const handleJoinVideoCall = () => {
+  const handleJoinVideoCall = async () => {
     if (!meetingCode.trim()) return;
 
+    // Save to history BEFORE navigating away
+    try {
+      await addToUserHistory(meetingCode.trim());
+    } catch (error) {
+      console.error("Error joining meeting:", error);
+    }
 
-    navigate(`/${meetingCode}`);
-    
-
-    addToUserHistory(meetingCode).catch(error => {
-      console.error("Background - Error joining meeting:", error);
-    });
+    navigate(`/${meetingCode.trim()}`);
   };
 
   return (
